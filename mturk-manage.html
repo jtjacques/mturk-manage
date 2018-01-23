@@ -1,0 +1,1366 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Manage HITs</title>
+  <meta name="description" content="Browser-based MTurk management console">
+  <meta name="author" content="jtjacques@gmail.com">
+
+  <!-- jQuery, jQuery: https://code.jquery.com -->
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+  
+  <!-- AWS SDK, Amazon: https://github.com/aws/aws-sdk-js -->
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.186.0.min.js"></script>
+
+  <!-- CSV file download support, Xavier John: https://stackoverflow.com/a/24922761 -->
+  <script>
+    function exportToCsv(filename, rows) {
+            var processRow = function (row) {
+                var finalVal = '';
+                for (var j = 0; j < row.length; j++) {
+                    var innerValue = row[j] === null ? '' : row[j].toString();
+                    if (row[j] instanceof Date) {
+                        innerValue = row[j].toLocaleString();
+                    };
+                    var result = innerValue.replace(/"/g, '""');
+                    if (result.search(/("|,|\n)/g) >= 0)
+                        result = '"' + result + '"';
+                    if (j > 0)
+                        finalVal += ',';
+                    finalVal += result;
+                }
+                return finalVal + '\n';
+            };
+
+            var csvFile = '';
+            for (var i = 0; i < rows.length; i++) {
+                csvFile += processRow(rows[i]);
+            }
+
+            var blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
+            if (navigator.msSaveBlob) { // IE 10+
+                navigator.msSaveBlob(blob, filename);
+            } else {
+                var link = document.createElement("a");
+                if (link.download !== undefined) { // feature detection
+                    // Browsers that support HTML5 download attribute
+                    var url = URL.createObjectURL(blob);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", filename);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            }
+        }
+  </script>
+  
+  <style>
+    * {
+      font-family: Helvetica, Arial, sans-serif;
+    }
+    
+    html, body, #login {
+      min-height: 100%;
+    }
+
+    table {
+        border-collapse: collapse;
+        margin-top: 1em;
+        width: 100%;
+    }
+
+    table, th, td {
+        border: 1px solid black;
+        padding: 0.25em 0.75em;
+    }
+    
+      table .search-only {
+        display: inline-block;
+        width: 0;
+        overflow: hidden;
+      }
+
+      td.checkbox, td.reject {
+        text-align: center;
+      }
+    
+    table div {
+      margin: 0.23em 0;
+    }
+      
+    tr.ended {
+      background-color: silver;
+    }
+    
+    tr.ended.waiting {
+      background-color: whitesmoke;
+    }
+    
+    tr.assignment.rejected .reject a,
+    tr.assignment.approved .reject a,
+    tr.assignment.approved .checkbox input {
+      display: none;
+    }
+    
+    tr.assignment.approved {
+      background-color: whitesmoke;
+    }
+    
+    tr.assignment.rejected{
+      background-color: mistyrose;
+    }
+    
+    a {
+      color: blue;
+    }
+    
+    h1 a, .hit .hitid a {
+      color: inherit;
+    }
+    
+      h1 a.clickable, .hit .hitid a.clickable {
+        color: blue;
+      }
+    
+    noscript, .warn {
+      display: block;
+      border: 0.2em dashed black;
+      padding: 1em;
+      margin: 1em;
+      background-color: mistyrose;
+      border-color: firebrick;
+      color: darkred;
+    }
+    
+    .clickable {
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    
+    #header {
+      background-color: firebrick;
+      font-weight: bold;
+      font-size: 120%;
+      padding: 0.5em 1em;
+      box-sizing: border-box;
+    }
+      
+      #header a {
+        color: white;
+      }
+    
+      #header.sandbox {
+        background-color: goldenrod;
+      }
+      
+      #header-aws {
+        width: 100%;
+      }
+      
+        #header-aws span.clickable {
+          float: right;
+        }
+    
+    #footer {
+      margin-bottom: 65vh;
+    }
+    
+    #main-loading {
+      float: right;
+      margin-right: 1em;
+    }
+    
+    .hit .title a {
+      margin-left: 0.5em;
+      font-size: 80%;
+      vertical-align: text-top;
+    }
+    
+    .hit .keywords {
+      font-size: 80%;
+    }
+    
+    .hit .status .pending span span:before {
+      content: ' (+';
+    }
+    .hit .status .pending span span:after {
+      content: ')';
+    }
+    
+    .actions {
+      margin: 1em 0;
+    }
+    
+      .actions a {
+        padding: 0 0.75em;
+      }
+    
+        .actions a.active, .actions a.amazon {
+          padding-left: 0;
+          margin-left: -0.5em;
+          font-style: italic;
+        }
+
+    #main-list-limit-summary {
+      float: right;
+      margin: 0.5em 0.25em 0 0;
+    }
+    
+    #main-list-search {
+      font-family: inherit;
+      font-size: inherit;
+      padding: 0.2em;
+      width: 12em;
+    }
+    ::-webkit-input-placeholder { font-style: italic; }
+    :-moz-placeholder { font-style: italic; }
+    ::-moz-placeholder { font-style: italic; }
+    :-ms-input-placeholder { font-style: italic; }
+    
+    #login form {
+      display: block;
+      width: 50vw;
+      margin: 25vh auto;
+      border: 0.1em solid silver;
+      padding: 2em;
+      box-sizing: border-box;
+      font-size: 120%;
+    }
+    
+      #login form * {
+        display: block;
+      }
+      
+      #login form input, #login form select {
+        margin: 0 0 1em 0;
+        width: 100%;
+        box-sizing: border-box;
+        font-size: inherit;
+        border: 0.05em solid silver;
+        padding: 0.25em 0.5em;
+      }
+      
+      #login form button {
+        float: right;
+        font-size: inherit;
+        padding: 0.5em 0.75em;
+        clear: both;
+      }
+      
+      #login form:after {
+        content: '';
+        display: block;
+        clear: both;
+      }
+
+  </style>
+  
+  <script>
+  
+    // global variables
+    var __session = [];
+    
+    // how often to refresh cached data from api, in ms
+    __session['refresh-freq'] = 1 * 60 * 1000;
+    
+    // entry point
+    $(function() {
+      attachEvents();
+      updateMode();
+    });
+    
+    // attach events to various ui elements
+    function attachEvents() {
+      
+      // show login on change
+      $('#header-aws').click(function(event) {
+        updateMode('login');
+      });
+      
+      // login button
+      $('#login-button').click(function(event) {
+        event.preventDefault();
+        setLogin(event);
+      });
+      
+      // search box
+      $('#main-list-search').change(function(event) {
+        event.preventDefault();
+        $('#main-list-limit a').removeClass('clickable').addClass('clickable');
+        listHideExceptSearch($(this).val());
+      });
+      $('#main-list-search').keyup(function(event) {
+        $('#main-list-search').change();
+      });
+      
+      // all link
+      $('#main-list-limit-all').click(function(event) {
+        $('#main-list-limit a').removeClass('clickable').addClass('clickable');
+        $(this).removeClass('clickable');
+        $('#main-list-search').val('');
+        updateMode('list'); // switch mode to trigger refresh check
+        listHideExceptSearch(null);
+      });
+      
+      // active link
+      $('#main-list-limit-all-active').click(function(event) {
+        $('#main-list-limit a').removeClass('clickable').addClass('clickable');
+        $(this).removeClass('clickable');
+        $('#main-list-search').val('');
+        listHideExceptSearch(null, true);
+      });
+      
+      // manage hits title (proxy for all link)
+      $('#main-list-manage').click(function(event) {
+        $('#main-list-limit-all').click();
+      });
+      
+      // download link
+      $('#main-manage-download').click(function(event) {
+        downloadData();
+      });
+      
+      // download amazon format link
+      $('#main-manage-download-amazon').click(function(event) {
+        downloadData(true);
+      });
+      
+      // expire hit
+      $('#main-manage-hit-expire').click(function(event) {
+        if(
+            window.confirm('Are you sure you wish to expire this HIT?\n\n' +
+                'Title: "' + __session['current-hit'].Title + '"\n\n' +
+                'It has ' + __session['current-hit'].NumberOfAssignmentsAvailable +
+                ' assignments remaining and is not due to\n' +
+                'expire until ' + formatDate(__session['current-hit'].Expiration) + '.')
+        ) {
+          setHITExpiration(__session['current-hit'].HITId, new Date(0));
+        } else {
+          console.log('expire cancelled');
+        }
+      });
+      
+      // delete hit
+      $('#main-manage-hit-delete').click(function(event){
+        max = __session['current-hit'].MaxAssignments;
+        submitted = __session['current-hit'].Submitted;
+        
+        if(submitted > 0) {
+          window.alert('There are unreviewed submissions for this HIT.');
+          $('#main-manage-assign-submitted').click();
+          console.log('delete refused');
+        } else {
+          if(
+              window.confirm('Are you sure you wish to delete this HIT?\n\n' +
+                  'Title: "' + __session['current-hit'].Title + '"\n\n' + 
+                  'You will no longer be able to manage this HIT or download any response data.')
+          ) {
+            deleteHIT(__session['current-hit'].HITId);
+          } else {
+            console.log('delete cancelled');
+          }
+        }
+      });
+    
+      // extend hit
+      $('#main-manage-hit-extend').click(function(event) {
+        var extend = window.prompt('How many hours would you like to extend this HIT?');
+        if(extend != null && extend.indexOf('d') !== -1) {
+          extend = parseInt(extend.replace('d', '') * 24);
+        }
+        extend = parseInt(extend);
+  
+        if(extend > 0) {
+        
+          var expiration = __session['current-hit'].Expiration.getTime();
+          if(expiration < new Date().getTime()) {
+            expiration = new Date().getTime();
+          }
+          expiration = new Date(expiration + (extend * 60 * 60 * 1000));
+    
+          if(
+              window.confirm('Are you sure you wish to extend this HIT by ' + extend +
+                  ' hours?\n\nTitle: "' + __session['current-hit'].Title + '"\n\n' +
+                  'The task will expire at: ' + formatDate(expiration))
+          ) {
+            setHITExpiration(__session['current-hit'].HITId, expiration);
+          } else {
+            console.log('extend cancelled');
+          }
+    
+        } else {
+          if(!isNaN(extend) && extend != 0) {
+            window.alert('The extension period must be a positive integer number of hours.')
+          }
+          console.log('extend not valid');
+        }
+      });
+
+      // increase hit
+      $('#main-manage-hit-increase').click(function(event) {
+        var extend = window.prompt('How many additional assignments would you like to add to this HIT?');
+        extend = parseInt(extend);
+        
+        if(extend > 0) {
+        
+          current = __session['current-hit'].MaxAssignments;
+        
+          if( ! ((current < 10) && ((extend + current) > 9)) ) {
+          
+          if(
+              window.confirm('Are you sure you wish to add ' + extend +
+                  ' assignments to this HIT?\n\n' +
+                  'Title: ' + __session['current-hit'].Title + '. \n\n' +
+                  'It currently has '+ __session['current-hit'].NumberOfAssignmentsAvailable +
+                  ' assignments remaining.')
+          ) {
+            addAssignmentToHIT(__session['current-hit'].HITId, extend);
+          } else {
+            console.log('increase cancelled');
+          }
+          
+          } else {
+            window.alert('This increase would result in more than 9 assignments for this HIT.\n\n' +
+                'Tasks with less than 10 assignments may not be extended to exceed 9.\n\n' +
+                (current == 9 ? 'No additional assignments can be added for this HIT.' :
+                    ('The maximum increase possible for this HIT is ' + (9 - current) + '.') )
+            );
+            console.log('increase not valid (change of price band)');
+          }
+          
+        } else {
+          if(!isNaN(extend) && extend != 0) {
+            console.log(extend);
+            window.alert('The number of assignments to be added must be a positive integer number.')
+          }
+          console.log('increase not valid');
+        }
+      });
+      
+      // list submitted only
+      $('#main-manage-assign-submitted').click(function(event) {
+        __session['assignment-mode'] = 'submitted';
+        assignmentHideExcept('submitted');
+        updateMode('manage');
+      });
+      
+      // list approved only
+      $('#main-manage-assign-approved').click(function(event) {
+        __session['assignment-mode'] = 'approved';
+        assignmentHideExcept('approved');
+      });
+      
+      // list rejected only
+      $('#main-manage-assign-rejected').click(function(event) {
+        __session['assignment-mode'] = 'rejected';
+        assignmentHideExcept('rejected');
+      });
+      
+      // list all
+      $('#main-manage-assign-all').click(function(event) {
+        __session['assignment-mode'] = 'all';
+        assignmentHideExcept('all');
+        updateMode('manage');
+      });
+    
+      // check all
+      $('#main-assignment-check-all').change(function(event) {
+        $('#main-assignment-table .assignment input[type=checkbox]:visible').prop('checked',
+            $('#main-assignment-check-all').prop('checked'));
+      });
+      
+      // approve selected
+      $('#main-assingment-approve-checked').click(function(event) {
+        var visible = $("#main-assignment-table .assignment .checkbox input[type=checkbox]:checked:visible"); // save visible
+        if(visible.length) {
+          $('#main-loading').show();
+          $.each(visible, function(index, checkbox) {
+            var params = {AssignmentId: checkbox.value, OverrideRejection: true};
+            __session['mturk'].approveAssignment(params, function(err, data) {
+              if (err) {
+                console.log(err.message);
+              } else { }
+              if(index == (visible.length -1)) {
+                __session['hits-age'] = 0;
+                __session['assignments-age'] = 0;
+                updateMode();
+                $('#main-loading').hide();
+              }
+            });
+            
+          });
+        } else {
+          window.alert('No assignments selected.');
+          console.log('nothing to approve');
+        }
+        
+      });
+      
+    }
+    
+    // checkbox helper
+    function checkboxHelper(event) {
+      if($(event)[0].target.tagName.toLowerCase() != 'input') {
+        console.log($(event));
+        $($(event)[0].target).find('input[type=checkbox]:visible').prop('checked',
+            !$($(event)[0].target).find('input[type=checkbox]').prop('checked'));
+      }
+    }
+    
+    // reject assignment
+    function rejectAssignment(event, assignment) {
+      var feedback = window.prompt('Please provide feedback to the worker as to the reason for rejection:');
+      if(feedback != null && feedback !== '') {
+        if(feedback.length <= 1024) {
+          if(
+              window.confirm('Are you sure you wish to reject work by ' + assignment.WorkerId + ' ?\n\n' +
+                  'Assignment: ' + assignment.AssignmentId + '\n\n' +
+                  'Feedback: "' + feedback + '"')
+          ) {
+            $('#main-loading').show();
+            var params = {AssignmentId: assignment.AssignmentId, RequesterFeedback: feedback};
+            __session['mturk'].rejectAssignment(params, function(err, data) {
+              if (err) {
+                console.log(err.message);
+              } else {
+                __session['hits-age'] = 0;
+                __session['assignments-age'] = 0;
+                updateMode();
+              }
+              $('#main-loading').hide();
+            });
+          } else {
+            console.log('reject cancelled');
+          }
+
+        } else {
+          window.alert('Feedback too long.\n\nMaximum feedback length is 1024 characters.');
+          console.log('reject refused - feedback too long');
+        }
+
+      } else {
+        if(feedback != null) {
+          window.alert('Feedback is required.');
+          console.log('reject refused - no feedback');
+        } else {
+          console.log('reject cancelled');
+        }
+      }
+    }
+    
+    // set hit expiration date
+    function setHITExpiration(hitid, date) {
+      $('#main-loading').show();
+      var timestamp = Math.floor((date.getTime()/1000));
+      var params = {HITId: hitid, ExpireAt: timestamp};
+      __session['mturk'].updateExpirationForHIT(params, function(err, data) {
+        if (err) {
+          console.log(err.message);
+        } else {
+          __session['hits-age'] = 0;
+          updateMode();
+        }
+        $('#main-loading').hide();
+      });
+    }
+    
+    // add assignment to hit
+    function addAssignmentToHIT(hitid, assignments) {
+      $('#main-loading').show();
+      var params = {HITId: hitid, NumberOfAdditionalAssignments: assignments};
+      __session['mturk'].createAdditionalAssignmentsForHIT(params, function(err, data) {
+        if (err) {
+          console.log(err.message);
+        } else {
+          __session['hits-age'] = 0;
+          updateMode();
+        }
+        $('#main-loading').hide();
+      });
+    }
+    
+    // delete hit
+    function deleteHIT(hitid) {
+      $('#main-loading').show();
+      var params = {HITId: hitid};
+      __session['mturk'].deleteHIT(params, function(err, data) {
+        if (err) {
+          console.log(err.message);
+        } else {
+          __session['hits-age'] = 0;
+          doList();
+        }
+        $('#main-loading').hide();
+      });
+    }
+    
+    // update hit action links
+    function updateHITActions() {
+      $('#main-manage-actions a').show();
+      if($('#main-list-table .hit:visible').hasClass('ended')) {
+        $('#main-manage-hit-expire').hide();
+        if(__session['current-hit'] && __session['current-hit'].Submitted) {
+          $('#main-manage-hit-delete').hide();
+        }
+      } else {
+        $('#main-manage-hit-delete').hide();
+      }
+    }
+    
+    // filter assignments 
+    function assignmentHideExcept(except) {
+      $('#main-assignment-table .assignment').hide();
+      $('#main-assignment-table .assignment' + (except == 'all' ? '' : '.' + except)).show();
+      $('#main-assignment-table-none').hide();
+      if($('#main-assignment-table .assignment:visible').length == 0) {
+        $('#main-assignment-table-none').show();
+      }
+      $('#main-manage-limit a').removeClass('clickable').addClass('clickable');
+      $('#main-manage-assign-' + except).removeClass('clickable');
+      $('#main-assignment-check-all').prop('checked', false); // should we uncheck all?
+    }
+    
+    // filter hits
+    function listHideExceptSearch(search, active) {
+      search = search ? search.toLowerCase() : ' ';
+      active = active ? true : false;
+      $('#main-list-table tr').hide();
+      $('#main-list-table tr').filter(function(index) { return $(this).text().toLowerCase().indexOf(search) > -1; }).show();
+      if(active) {
+        $('#main-list-table tr.ended').filter(function(index) { return !$(this).hasClass('waiting'); } ).hide();
+      }
+      updateSummary();
+      updateHITActions();
+    }
+    
+    // update summary data
+    function updateSummary() {
+      // update "none" display
+      $('#main-list-table-header').hide();
+      $('#main-list-table-none').hide();
+      if($('#main-list-table tr:visible').length == 0) {
+        $('#main-list-table-none').show();
+      }
+      $('#main-list-table-header').show();
+      // count properties for each type
+      var t = 0, p = 0, pc = 0, al = 0, ae = 0, c = 0;
+      $.each($('#main-list-table tr:visible .status .pending>span'),
+          function(key, value) { p += parseInt($($(value).contents()[0]).text()); t++; });
+      $.each($('#main-list-table tr:visible .status .pending>span span'),
+          function(key, value) { pc += parseInt($(value).text()); });
+      $.each($('#main-list-table tr.active:visible .status .available>span'),
+          function(key, value) { al += parseInt($(value).text()); });
+      $.each($('#main-list-table tr.ended:visible .status .available>span'),
+          function(key, value) { ae += parseInt($(value).text()); });
+      $.each($('#main-list-table tr:visible .status .completed>span'),
+          function(key, value) { c += parseInt($(value).text()); });
+      // update summary display
+      $('#main-list-limit-summary-t').html(t);
+      $('#main-list-limit-summary-p').html(p +
+          (pc > 0 ? (' (+<span title="submitted, pending review">') + pc + '</span>)': '') );
+      $('#main-list-limit-summary-a').html(al +
+          (ae > 0 ? (' (+<span title="available for expired tasks">') + ae + ')': '') );
+      $('#main-list-limit-summary-c').html(c);
+    }
+    
+    // switch current mode
+    function updateMode(action) {
+      // update action if specified
+      __session['action'] = action ? action : __session['action'];
+      
+      // restore some defaults
+      $('#main-list-limit').show();
+      $('#main-list-manage').removeClass('clickable');
+      
+      // hide modal page elements
+      $('body>*').hide();
+      $('#main>*').not('#main-loading').hide();
+      
+      
+      // change mode
+      switch(__session['action']) {
+        case 'manage':
+          doManage();
+          break;
+        case 'list':
+          doList();
+          break;
+        default:
+        case 'login':
+          doLogin();
+          break;
+      }
+      
+    };
+    
+    // login mode
+    function doLogin() {
+      // clear caches
+      __session['hits-age'] = 0; __session['hits'] = [];
+      $('#main-list-table .hit').remove();
+      
+      // show login box
+      $('#login').show();
+    }
+    
+    // set login values
+    function setLogin(event) {
+      // configure api
+      var config = new AWS.Config({
+        accessKeyId: $('#login-aws-accessKeyId').val(),
+        secretAccessKey: $('#login-aws-secretAccessKey').val(),
+        region: $('#login-aws-region').val()
+      });
+      AWS.config = config;
+      
+      // update mturk endpoint
+      __session['mturk'] = new AWS.MTurk({ endpoint: $('#login-aws-endpoint').val() });
+      
+      // update header elements
+      $('#header-aws-accessKeyId').text($('#login-aws-accessKeyId').val());
+      $('#header-aws-endpoint').text($('#login-aws-endpoint').find(':selected').text());
+      if($('#login-aws-endpoint').val().indexOf('sandbox') > -1) {
+        $('#header').addClass('sandbox');
+      } else {
+        $('#header').removeClass('sandbox');
+      }
+      
+      updateMode('list');
+    }
+    
+    // manage hits
+    function manageHIT(event, hit) {
+      __session['current-hit'] = hit;
+      __session['assignment-mode'] = 'submitted';
+      updateMode('manage');
+      updateHITActions();
+    }
+    
+    // manage mode
+    function doManage() {
+      $('#content').show();
+      $('#main-list').show();
+      $('#main-list-limit').hide();
+      $('#main-manage').show();
+      
+      // mark header clickable
+      $('#main-list-manage').removeClass('clickable').addClass('clickable');
+
+      // refresh hits
+      if(doRefresh(__session['hits-age'])) {
+        updateHITs();
+      }
+
+      // get assignments
+      if(doRefresh(__session['assignments-age'])) {
+        updateAssignments(__session['current-hit'].HITId);
+      }
+      
+      // filter down to current hit
+      listHideExceptSearch(__session['current-hit'].HITId);
+      $('.hit .hitid a').removeClass('clickable');
+    }
+    
+    // list hits
+    function doList() {
+      $('#content').show();
+      $('#main-list').show();
+
+      // refresh hits
+      if(doRefresh(__session['hits-age'])) {
+        updateHITs();
+
+        // default listing
+        $('#main-list-limit-all').click();
+      }
+        
+      // clear assignment cache
+      __session['assignments-age'] = 0;
+      __session['assignments'] = [];
+      
+      // remove assignments from dom to prevent flash 
+      $('#main-assignment-table tr.assignment').remove();
+
+      // ensure that hitids are clickable
+      $('.hit .hitid a').removeClass('clickable').addClass('clickable');
+    };
+    
+    // update stored assignments
+    function updateAssignments(hitid) {
+      // clear stored assignments
+      __session['assignments'] = [];
+      __session['assignments-age'] = new Date().getTime();
+      buildAssignmentCache(hitid, false);
+    }
+
+    // build cache of assignments
+    function buildAssignmentCache(hitid, paginationToken) {
+      $('#main-loading').show();
+      var params = paginationToken ? {HITId: hitid, MaxResults: 100, NextToken: paginationToken} : {HITId: hitid, MaxResults: 100};
+      __session['mturk'].listAssignmentsForHIT(params, function(err, data) {
+        if (err) {
+          console.log(err.message);
+        } else {
+          paginationToken = data.NextToken ? data.NextToken : false;
+          if(data.NumResults) {
+            // add this page of results to cache
+            __session['assignments'] = __session['assignments'].concat(data.Assignments);
+            // loop
+            buildAssignmentCache(hitid, paginationToken);
+          } else {
+            // no more hits to get, render
+            renderAssignments();
+          }
+        }
+      });
+    }
+    
+    // add assignments to dom
+    function renderAssignments() {
+      //remove previous assignments
+      $('#main-assignment-table .assignment').remove();
+
+      // process array of assignments
+      $.each(__session['assignments'], function(index, assignment) {
+        // clear answer cache
+        assignment.Answers = [];
+        // extract answers
+        var answerdom = null;
+        var answer = $.parseXML(assignment.Answer);
+        $.each($(answer).find('Answer'), function(index, a){
+          question = $(a).find('QuestionIdentifier').text();
+          response = $(a).find('SelectionIdentifier').text();
+          response = response ? response : $(a).find('FreeText').text();
+          // cache responses
+          assignment.Answers.push({question: question, response: response});
+          // generate dom items
+          var el = $('<div>').addClass('answer').text(question + ': ').append($('<span>').text(response));
+          if(answerdom) {
+            answerdom.append(el);
+          } else {
+            answerdom = el;
+          }
+        });
+        // add table row
+        $('#main-assignment-table-header').after(
+          $('<tr>').addClass('assignment')
+              .addClass(assignment.AssignmentStatus.toLowerCase())
+              // checkboxes
+              .append(
+                $('<td>').addClass('checkbox')
+                  .click( function(event) { checkboxHelper(event); } )
+                  .append(
+                    $('<input>').prop('type', 'checkbox').val(assignment.AssignmentId)
+                  )
+              )
+              // assignment id
+              .append( $('<td>').addClass('assignmentid')
+                .append($('<span>').addClass('search-only').text(assignment.AssignmentId))
+                .append(
+                  $('<span>').prop('title', assignment.AssignmentId)
+                    .text('...' + assignment.AssignmentId.substr(assignment.AssignmentId.length -6, 6))
+                )
+              )
+              // assingment worker id
+              .append( $('<td>').addClass('workerid').text(assignment.WorkerId) )
+              // assignment answers
+              .append( $('<td>').addClass('answer')
+                .append(
+                  $('<div>').append( answerdom )
+                )
+              )
+              // assignment time details
+              .append( $('<td>').addClass('time')
+                .append(
+                  $('<div>').addClass('accept').text('Accept: ')
+                    .append( $('<span>').text( formatDate(assignment.AcceptTime) ) )
+                )
+                .append(
+                  $('<div>').addClass('submit').text('Submit: ')
+                    .append( $('<span>').text( formatDate(assignment.SubmitTime) ) )
+                )
+                .append(
+                  $('<div>').addClass('approval').text('Approval: ')
+                    .append( $('<span>').text( formatDate(assignment.ApprovalTime) ) )
+                )
+              )
+              // assingment status
+              .append( $('<td>').addClass('status').text(assignment.AssignmentStatus) )
+              // assingment reject
+              .append( $('<td>').addClass('reject')
+                .append(
+                  $('<a>').addClass('clickable')
+                    .click( function(event) { rejectAssignment(event, assignment); } )
+                    .text('Reject')
+                )
+              )
+        );
+        
+      });
+      
+      updateMode();
+      
+      $('#main-loading').hide();
+      
+      // filter list
+      $('#main-manage-assign-' + __session['assignment-mode']).click(); 
+      
+    }
+    
+    // download data
+    function downloadData(amazon) {
+      
+      // amazon uses amazon (2), new uses iso (1)
+      var dateFormat = amazon ? 2 : 1;
+      
+      var csv = [];
+      var header = ['HitId', 'HitTitle', 'Annotation', 'AssignmentId', 'WorkerId', 'Status', 'AcceptTime', 'SubmitTime'];
+      var count = 0;
+      var questions = [];
+      var data = []; 
+      
+      // extract appropriate header information
+      $.each(__session['assignments'], function(index, assignment) {
+        count = count < assignment.Answers.length ? assignment.Answers.length : count;
+        if(!amazon) {
+          $.each(assignment.Answers, function(index, answer){
+            if(questions.indexOf(answer.question) < 0) {
+              questions.push(answer.question);
+            }
+          });
+        }
+      });
+      
+      // generate data rows
+      $.each(__session['assignments'], function(index, assignment) {
+        // save common data
+        var row = [assignment.HITId,
+                   __session['current-hit'].Title,
+                   (__session['current-hit'].RequesterAnnotation ? __session['current-hit'].RequesterAnnotation : ''),
+                   assignment.AssignmentId,
+                   assignment.WorkerId,
+                   assignment.AssignmentStatus,
+                   formatDate(assignment.AcceptTime, dateFormat),
+                   formatDate(assignment.SubmitTime, dateFormat)
+                  ];
+        if(!amazon) {
+          // look for appropriate response
+          $.each(questions, function(index, question) {
+            var response = '';
+            $.each(assignment.Answers, function(index, answer){
+              if(question == answer.question) {
+                response = answer.response;
+              }
+            });
+            row.push(response);
+          });
+          // approve/reject time
+          row.push(formatDate((assignment.ApprovalTime ? assignment.ApprovalTime : assignment.RejectionTime), dateFormat));
+        } else {
+          // save in order
+          $.each(assignment.Answers, function(index, answer){
+            row.push(answer.response);
+          });
+        }
+        data.push(row);
+      });
+      
+      // finalise headers
+      if(amazon) {
+        for(var i = 1; i <= count; i++) {
+          header.push('Answer ' + i);
+        }
+      } else {
+        questions.push('ApproveRejectTime')
+      }
+      header = header.concat(questions);
+      
+      // combine headers and data
+      csv.push(header);
+      csv = csv.concat(data);
+      
+      // download file
+      exportToCsv('HITResultsFor' + __session['current-hit'].HITId + '.csv', csv);
+    }
+    
+    // update stored hits
+    function updateHITs() {
+      // clear stored hits
+      __session['hits'] = [];
+      __session['hits-age'] = Date.now();
+      buildHITCache(false);
+    }
+    
+    // build cache of hits
+    function buildHITCache(paginationToken) {
+      $('#main-loading').show();
+      var params = paginationToken ? {MaxResults: 100, NextToken: paginationToken} : {MaxResults: 100};
+      __session['mturk'].listHITs(params, function(err, data) {
+        if (err) {
+          console.log(err.message);
+          updateMode('login');
+        } else {
+          paginationToken = data.NextToken ? data.NextToken : false;
+          if(data.NumResults) {
+            // add this page of results to cache
+            __session['hits'] = __session['hits'].concat(data.HITs);
+            // loop
+            buildHITCache(paginationToken);
+          } else {
+            // no more hits to get, render
+            renderHITs();
+          }
+        }
+      });
+    }
+    
+    // add hits to dom
+    function renderHITs() {
+      //remove previous hits
+      $('#main-list-table .hit').remove();
+
+      // process array of hits
+      $.each(__session['hits'], function(index, hit) {
+        var question = $.parseXML(hit.Question);
+        hit.Submitted = (
+            hit.MaxAssignments - (hit.NumberOfAssignmentsPending +
+                                  hit.NumberOfAssignmentsAvailable +
+                                  hit.NumberOfAssignmentsCompleted) );
+        // update current hit
+        if(__session['current-hit'] && hit.HITId == __session['current-hit'].HITId) {
+          __session['current-hit'] = hit;
+        }
+        // add table row
+        $('#main-list-table-header').after(
+          $('<tr>').addClass('hit')
+              .addClass(
+                ( (hit.HITStatus == 'Assignable' || hit.HITStatus == 'Unassignable') ? 'active' : 'ended' )
+              )
+              .addClass(
+                ( hit.Submitted > 0 ? 'waiting' : '' )
+              )
+              // hit id
+              .append( $('<td>').addClass('hitid')
+                .append($('<span>').addClass('search-only').text(hit.HITId))
+                .append(
+                  $('<a>').addClass('clickable')
+                    .click( function(event) { manageHIT(event, hit); } )
+                    .prop('title', hit.HITId)
+                    .text('...' + hit.HITId.substr(hit.HITId.length -6, 6))
+                )
+              )
+              // hit description
+              .append( $('<td>').addClass('task')
+                .append(
+                  $('<div>').addClass('title')
+                    .append( $('<strong>').text( hit.Title ) )
+                    .append(
+                      ( $(question).find('ExternalURL').text() ?
+                            $('<a>').text( '(url)' )
+                              .prop('target', '_blank')
+                              .prop('href', $(question).find('ExternalURL').text() +
+                                ( $(question).find('ExternalURL').text().indexOf('?') > 0 ? '&' : '?' ) +
+                                'assignmentId=ASSIGNMENT_ID_NOT_AVAILABLE&hitId=' +
+                                hit.HITId +
+                                '&source=manage-hits-console' ) :
+                             null )
+                    )
+                    .append(
+                      ( hit.HITStatus == 'Assignable' ?
+                            $('<a>').text( '(mturk)' )
+                              .prop('target', '_blank')
+                              .prop('href',
+                                'https://worker' +
+                                ( ($('#login-aws-endpoint').val().indexOf('sandbox') > -1) ? 'sandbox' : '') +
+                                '.mturk.com/projects/' + hit.HITGroupId + '/tasks?ref=w_pl_prvw'
+                              ) :
+                            null )
+                    )
+                )
+                .append(
+                  $('<div>').addClass('desc').text( hit.Description) )
+                .append(
+                  $('<div>').addClass('keywords').text( hit.Keywords) )
+              )
+              // hit reward
+              .append( $('<td>').addClass('reward')
+                .append(
+                  $('<div>').addClass('price').text('Price: $').append(
+                    $('<span>').text(hit.Reward)
+                  )
+                )
+                .append(
+                  $('<div>').addClass('qualifications').text('Qualifications: ').append(
+                    $('<span>').text(formatQualifications(hit.QualificationRequirements))
+                  )
+                )
+                .append(
+                  ( hit.QualificationRequirements.length > 0 ?
+                      $('<div>').addClass('reqired').text('Required to preview: ').append(
+                          $('<span>').text(formatPreview(hit.QualificationRequirements))
+                      ) : null )
+                )
+              )
+              // hit time details
+              .append( $('<td>').addClass('time')
+                .append(
+                  $('<div>').addClass('duration').text('Duration: ')
+                    .append( $('<span>').text( formatDuration(hit.AssignmentDurationInSeconds) ) )
+                )
+                .append(
+                  $('<div>').addClass('created').text('Created: ')
+                    .append( $('<span>').text( formatDate(hit.CreationTime) ) )
+                )
+                .append(
+                  $('<div>').addClass('expires').text('Expires: ')
+                    .append( $('<span>').text( formatDate(hit.Expiration) ) )
+                )
+              )
+              // hit status
+              .append( $('<td>').addClass('status')
+                .append(
+                  $('<div>').addClass('pending').text('Pending: ')
+                    .append(
+                      $('<span>').text(hit.NumberOfAssignmentsPending)
+                        .append(
+                          ( hit.Submitted > 0 ?
+                                $('<span>').prop('title', 'submitted, pending review')
+                                  .text(hit.Submitted) :
+                              null )
+                        )
+                    )
+                )
+                .append(
+                  $('<div>').addClass('available').text('Available: ')
+                    .append( $('<span>').text(hit.NumberOfAssignmentsAvailable) )
+                )
+                .append(
+                  $('<div>').addClass('completed').text('Completed: ')
+                    .append( $('<span>').text(hit.NumberOfAssignmentsCompleted) )
+                )
+              )
+        );
+        
+      });
+      
+      updateMode();
+      updateSummary();
+      
+      $('#main-loading').hide();
+      
+    }
+    
+    // check for refresh time
+    function doRefresh(value) {
+      if(value) {
+        return (new Date().getTime() - value) > __session['refresh-freq'];
+      }
+      return true;
+    }
+    
+    // format duration
+    function formatDuration(s) {
+      return Math.floor(s/60/60) + 'h ' + formatNumber(Math.floor((s/60) % 60)) + 'm ' + formatNumber((s % 60)) + 's';
+    }
+    
+    function formatNumber(n) {
+      n = (n).toString();
+      return n.length == 1 ? '0' + n : n;
+    }
+    
+    // format date (flag: 0, utc; 1, iso; 2, amazon)
+    function formatDate(date, flag) {
+      if(flag == 2) {
+        d = new Date(new Date(date).getTime() - (8 * 60 * 60 * 1000));
+        return d.toUTCString().split(',')[0] + ' ' +
+            d.toUTCString().split(' ')[2] + ' ' +
+            zeroPad(d.getUTCDate(), 2) + ' ' +
+            zeroPad(d.getUTCHours(), 2) + ':' +
+            zeroPad(d.getMinutes(), 2) + ':' +
+            zeroPad(d.getUTCSeconds(), 2) + ' PST ' +
+            d.getUTCFullYear();
+      }
+      if(flag == 1) {
+        return new Date(date).toISOString();
+      }
+      return new Date(date).toUTCString();
+    }
+    
+    function zeroPad(number, len) {
+      number = number.toString();
+      while(number.length < len) {
+        number = '0' + number;
+      }
+      return number;
+    }
+    
+    // format qualifications
+    function formatQualifications(quals) {
+      var string = quals.length;
+      $.each(quals, function(index, qual) {
+        // Locale
+        if(qual.QualificationTypeId == '00000000000000000071') {
+          string += ' (' + (qual.Comparator == 'NotEqualTo' ? 'not ' : '') +
+              qual.LocaleValues[(qual.LocaleValues.length -1)].Country + ')';
+        }
+        // Masters
+        if(
+            (qual.QualificationTypeId == '2ARFPLSP75KLA8M8DH1HTEQVJT3SY6'
+                || qual.QualificationTypeId == '2F1QJWKUDD8XADTFD2Q0G6UTO95ALH') &&
+            qual.Comparator == 'Exists'
+        ) {
+          string += ' (Masters)';
+        }
+        // Adult
+        if(qual.QualificationTypeId == '00000000000000000060' &&
+            qual.IntegerValues.indexOf(1) > -1) {
+          string += ' (Adult)';
+        }
+      });
+      return string;
+    }
+    
+    // format preview
+    function formatPreview(quals) {
+      var string = 'No';
+      $.each(quals, function(index, qual) {
+        if(qual.RequiredToPreview) {
+          string = 'Yes';
+        }
+      });
+      return string;
+    }
+  
+  </script>
+</head>
+
+<body>
+
+  <!-- https://enable-javascript.com -->
+  <noscript>
+    This management console requires JavaScript. Please
+    <a href="https://www.enable-javascript.com/" target="_blank">enable JavaScript</a> and
+    refresh this page to continue.
+  </noscript>
+  
+  <div id="login">
+    <form action="file://">
+      <input id="login-aws-accessKeyId" placeholder="YOUR_ACCESS_ID" type="text">
+      <input id="login-aws-secretAccessKey" placeholder="YOUR_SECRET_ACCESS_KEY" type="password">
+      <input id="login-aws-region" value="us-east-1" type="hidden">
+      <select id="login-aws-endpoint">
+        <option value="https://mturk-requester-sandbox.us-east-1.amazonaws.com">Sandbox</option>
+        <option value="https://mturk-requester.us-east-1.amazonaws.com">Production</option>
+      </select>
+      <button id="login-button" type="button">Continue</button>
+    </form>
+  </div>
+  
+  <div id="content">
+  
+    <div id="header">
+      <a id="header-aws">
+        <span id="header-aws-endpoint"></span>:
+        <span id="header-aws-accessKeyId"></span>
+        <span class="clickable">(change)</span>
+      </a>
+    </div>
+    
+    <div id="main">
+      
+      <div id="main-loading">
+        <!-- Ajax-loader.gif, optimized, base64 encoded: https://commons.wikimedia.org/wiki/File:Ajax-loader.gif -->
+        <img alt="Loading data..." title="Loading data..." src="data:image/gif;base64,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">
+      </div>
+    
+      <div id="main-list">
+
+        <h1><a id="main-list-manage">Manage HITs</a></h1>
+
+        <div id="main-list-limit" class="actions">
+          Show only:
+            <a id="main-list-limit-all">All</a>
+            <a id="main-list-limit-all-active" class="active">(Active)</a>
+            <input id="main-list-search" type="text" placeholder="Search All HITs" />
+            <div id="main-list-limit-summary">
+              Summary:
+                <span title="Tasks">T</span>: <span id="main-list-limit-summary-t"></span> /
+                <span title="Pending">P</span>: <span id="main-list-limit-summary-p"></span> /
+                <span title="Available">A</span>: <span id="main-list-limit-summary-a"></span> /
+                <span title="Completed">C</span>: <span id="main-list-limit-summary-c"></span>
+            </div>
+        </div>
+      
+        <table id="main-list-table">
+          <tr id="main-list-table-header">
+            <th>ID</th>
+            <th>Task</th>
+            <th>Reward</th>
+            <th>Time</th>
+            <th>Status</th>
+          </tr>
+
+          <tr id="main-list-table-none"><td colspan="5">No tasks to display</td></tr>
+        </table>
+      
+      </div>
+      
+      <div id="main-manage">
+      
+
+        <div id="main-manage-actions" class="actions">
+          Actions:
+            <a id="main-manage-download" class="clickable">Download Data</a>
+            <a id="main-manage-download-amazon" class="amazon clickable">(Amazon)</a>
+            <a id="main-manage-hit-extend" class="clickable">Add Time</a>
+            <a id="main-manage-hit-increase" class="clickable">Add Assignments</a>
+            <a id="main-manage-hit-expire" class="clickable">Expire</a>
+            <a id="main-manage-hit-delete" class="clickable">Delete</a>
+        </div>
+
+        <h2>Manage Assignments</h2>
+
+        <div id="main-manage-limit" class="actions">
+          Show only:
+            <a id="main-manage-assign-submitted">Submitted</a>
+            <a id="main-manage-assign-approved">Approved</a>
+            <a id="main-manage-assign-rejected">Rejected</a>
+            <a id="main-manage-assign-all">All</a>
+        </div>      
+      
+        <form id="main-assignment-form" class="actions" action="file://">
+
+          <table id="main-assignment-table">
+            <tr id="main-assignment-table-header">
+              <th><input type="checkbox" id="main-assignment-check-all"></th>
+              <th>ID</th>
+              <th>Worker</th>
+              <th>Answer</th>
+              <th>Time</th>
+              <th>Status</th>
+              <th>Reject</th>
+            </tr>
+            <tr id="main-assignment-table-none"><td colspan="7">No assignments to display</td></tr>
+          </table>
+
+          <div id="main-assignment-actions" class="actions">
+            Actions: <a id="main-assingment-approve-checked" class="clickable">Approve Selected</a>
+          </div>
+
+        </form>
+      
+      </div>
+      
+    </div>
+    
+    <div id="footer">
+    </div>
+    
+  </div>
+  
+</body>
+</html>
