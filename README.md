@@ -146,7 +146,7 @@ The interface has only undergone limited testing, primarily with [`ExternalQuest
 
 Dates and times are shown in the interface in UTC using the [`toUTCString()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toUTCString) method. When exporting data timestamps are reported using ISO or Amazon equivalent formats.
 
-Where existing functionality was retained in the official interface, it is not replicated here. For example, blocking workers may still be made from the official requester [workers page](https://requester.mturk.com/workers).
+Where existing functionality was retained in the official interface, it is not replicated here. For example, blocking workers may still be done from the official requester [workers page](https://requester.mturk.com/workers).
 
 To minimise the number of API calls, the interface caches the HIT and Assignment data for 60 seconds. If you do not wish to change the mode of operation, clicking on the appropriate *All* filter will refresh the cache after this time. The caching period is configured, in the code, using the `__session['refresh-freq']` field and is indicated in milliseconds.
 
@@ -162,7 +162,7 @@ The order of the parameters specified in *(Preview)* links include the additiona
 
 # Development
 
-## Change Log
+## Change Log
 
 ### 2018-02-02
 * Avoid calling the API where empty results sets will occur.
