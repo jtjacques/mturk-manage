@@ -10,9 +10,13 @@
 
   <!-- jQuery, jQuery: https://code.jquery.com -->
   <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+  <!-- jQuery UI, jQuery: https://code.jquery.com/ui -->
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   
   <!-- AWS SDK, Amazon: https://github.com/aws/aws-sdk-js -->
-  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.186.0.min.js"></script>
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.188.0.min.js"></script>
 
   <!-- CSV file download support, Xavier John: https://stackoverflow.com/a/24922761 -->
   <script>
@@ -118,6 +122,10 @@
       color: blue;
     }
     
+    h2 {
+      margin-top: 1.5em;
+    }
+    
     h1 a, .hit .hitid a {
       color: inherit;
     }
@@ -140,6 +148,10 @@
       text-decoration: underline;
       cursor: pointer;
     }
+
+      .clickable.ui-button {
+        line-height: 2em;
+      }
     
     #header {
       background-color: firebrick;
@@ -147,6 +159,10 @@
       font-size: 120%;
       padding: 0.5em 1em;
       box-sizing: border-box;
+    }
+    
+    #header-aws {
+      line-height: 2em;
     }
       
       #header a {
@@ -163,6 +179,8 @@
       
         #header-aws span.clickable {
           float: right;
+          text-decoration: none;
+          line-height: 1em;
         }
     
     #footer {
@@ -197,14 +215,50 @@
     
       .actions a {
         padding: 0 0.75em;
+        margin-left: 1.5em;
       }
     
-        .actions a.active, .actions a.amazon {
-          padding-left: 0;
-          margin-left: -0.5em;
+        .actions a.active, .actions a.adjunct {
+          margin-left: 0;
+          margin-left: 0;
+        }
+
+        .actions a.adjunct {
           font-style: italic;
         }
 
+    td.workerid {
+      position: relative;
+    }
+    
+      td.workerid .worker-actions {
+        opacity: 0.33;
+      }
+
+      td.workerid:hover .worker-actions {
+        opacity: 1;
+      }
+
+      .workerid .workerid {
+        padding: 1.55em 0;
+      }
+    
+    .worker-actions {
+      margin-left: -0.15em;
+      font-size: 75%;
+      position: absolute;
+      top: 50%;
+    }
+      
+      .worker-actions a {
+        margin: 0.75em 1em 0 0;
+      }
+    
+      .worker-actions a:last-child {
+        margin-right: 0;
+      }
+      
+    
     #main-list-limit-summary {
       float: right;
       margin: 0.5em 0.25em 0 0;
@@ -215,6 +269,7 @@
       font-size: inherit;
       padding: 0.2em;
       width: 12em;
+      margin-left: 1em;
     }
     ::-webkit-input-placeholder { font-style: italic; }
     :-moz-placeholder { font-style: italic; }
@@ -256,6 +311,85 @@
         display: block;
         clear: both;
       }
+
+    .ui-dialog form {
+      padding-top: 1em;
+      margin-left: 2%;
+    }
+    
+    .ui-dialog label {
+      display: block;
+      float: left;
+      clear: left;
+      width: 25%;
+      margin-right: 1em
+    }
+
+      .ui-dialog label:after {
+        content: ":";
+        display: inline-block;
+        float: right;
+        margin-top: -0.1em;
+      }
+    
+    .ui-dialog input, .ui-dialog textarea, .ui-dialog select {
+      float: left;
+      width: 65%;
+      margin-bottom: 1em;
+      margin-top: -0.35em;
+      padding: 0.25em;
+    }
+    
+    .ui-dialog select {
+      height: 1.9em;
+      margin-left: 1em;
+    }
+    
+    .ui-dialog textarea {
+      height: 10em;
+    }
+    
+    .ui-dialog .half input, .ui-dialog .half select {
+      width: 30%;
+    }
+    
+    .ui-dialog .wide label {
+      width: 50%;
+    }
+    
+    .ui-dialog iframe {
+      border: 0.15em solid silver;
+    }
+    
+    .ui-dialog-content div {
+      margin-top: 0.25em;
+      margin-bottom: 0.75em;
+    }
+    
+    .message-content {
+      display: block;
+      width: 100%;
+      margin-top: 0.35em;
+      /* font-style: italic; */
+      border: 0.05em solid silver;
+      min-height: 5em;
+      padding: 0.25em 0.5em;
+      box-sizing: border-box;
+    }
+    
+    #hit-preview {
+      overflow: hidden;
+    }
+  
+    #bonus-reference {
+      font-style: italic;
+      color: gray;
+    }
+    
+    #hit-preview iframe {
+      width: 100%;
+      height: 100%;
+    }
 
   </style>
   
@@ -331,114 +465,117 @@
       
       // expire hit
       $('#main-manage-hit-expire').click(function(event) {
-        if(
-            window.confirm('Are you sure you wish to expire this HIT?\n\n' +
-                'Title: "' + __session['current-hit'].Title + '"\n\n' +
-                'It has ' + __session['current-hit'].NumberOfAssignmentsAvailable +
-                ' assignments remaining and is not due to\n' +
-                'expire until ' + formatDate(__session['current-hit'].Expiration) + '.')
-        ) {
-          setHITExpiration(__session['current-hit'].HITId, new Date(0));
-        } else {
-          console.log('expire cancelled');
-        }
+        
+        $('#expire-hit').dialog({
+          height: 225,
+          width: 450,
+          minWidth: 450,
+          modal: true,
+          open: function(event, ui) {
+            $('#expire-hit-title').text(__session['current-hit'].Title);
+            $('#expire-hit-assignments').text(__session['current-hit'].NumberOfAssignmentsAvailable);
+            $('#expire-hit-current').text(formatDate(__session['current-hit'].Expiration));
+          },
+          buttons: {
+            "Expire HIT": function() {
+              setHITExpiration(__session['current-hit'].HITId, new Date(0));
+              $(this).dialog('close');
+            },
+            Cancel: function() {
+              console.log('expire cancel');
+              $(this).dialog('close');
+            }
+          }
+        });
+        
       });
       
       // delete hit
       $('#main-manage-hit-delete').click(function(event){
-        max = __session['current-hit'].MaxAssignments;
-        submitted = __session['current-hit'].Submitted;
         
-        if(submitted > 0) {
-          window.alert('There are unreviewed submissions for this HIT.');
+        if(__session['current-hit'].Submitted > 0) {
+          showMessage('Error', 'There are unreviewed submissions for this HIT.', 'delete refused');
           $('#main-manage-assign-submitted').click();
-          console.log('delete refused');
         } else {
-          if(
-              window.confirm('Are you sure you wish to delete this HIT?\n\n' +
-                  'Title: "' + __session['current-hit'].Title + '"\n\n' + 
-                  'You will no longer be able to manage this HIT or download any response data.')
-          ) {
-            deleteHIT(__session['current-hit'].HITId);
-          } else {
-            console.log('delete cancelled');
-          }
+          $('#delete-hit').dialog({
+            height: 225,
+            width: 450,
+            minwidth: 450,
+            modal: true,
+            open: function(event, ui) {
+              $('#delete-hit-title').text(__session['current-hit'].Title);
+            },
+            buttons: {
+              "Delete HIT": function() {
+                deleteHIT(__session['current-hit'].HITId);
+                $(this).dialog('close');
+              },
+              Cancel: function() {
+                console.log('delete cancel');
+                $(this).dialog('close');
+              }
+            }
+          });
         }
+        
       });
     
       // extend hit
       $('#main-manage-hit-extend').click(function(event) {
-        var extend = window.prompt('How many hours would you like to extend this HIT?');
-        if(extend != null && extend.indexOf('d') !== -1) {
-          extend = parseInt(extend.replace('d', '') * 24);
-        }
-        extend = parseInt(extend);
-  
-        if(extend > 0) {
+
+        $('#extend-hit').dialog({
+          height: 175,
+          width: 450,
+          minWidth: 450,
+          modal: true,
+          buttons: {
+            "Add Time": function() {
+              confirmExtendHit(__session['current-hit'], $('#extend-value').val(), $('#extend-multiply').val());
+              $(this).dialog('close');
+            },
+            Cancel: function() {
+              console.log('extend cancel');
+              $(this).dialog('close');
+            }
+          },
+          close: function() {
+            $('#extend-value').val(0);
+            $('#extend-multiply').val('hours');
+          }
+        });
         
-          var expiration = __session['current-hit'].Expiration.getTime();
-          if(expiration < new Date().getTime()) {
-            expiration = new Date().getTime();
-          }
-          expiration = new Date(expiration + (extend * 60 * 60 * 1000));
-    
-          if(
-              window.confirm('Are you sure you wish to extend this HIT by ' + extend +
-                  ' hours?\n\nTitle: "' + __session['current-hit'].Title + '"\n\n' +
-                  'The task will expire at: ' + formatDate(expiration))
-          ) {
-            setHITExpiration(__session['current-hit'].HITId, expiration);
-          } else {
-            console.log('extend cancelled');
-          }
-    
-        } else {
-          if(!isNaN(extend) && extend != 0) {
-            window.alert('The extension period must be a positive integer number of hours.')
-          }
-          console.log('extend not valid');
-        }
       });
 
       // increase hit
       $('#main-manage-hit-increase').click(function(event) {
-        var extend = window.prompt('How many additional assignments would you like to add to this HIT?');
-        extend = parseInt(extend);
-        
-        if(extend > 0) {
-        
-          current = __session['current-hit'].MaxAssignments;
-        
-          if( ! ((current < 10) && ((extend + current) > 9)) ) {
-          
-          if(
-              window.confirm('Are you sure you wish to add ' + extend +
-                  ' assignments to this HIT?\n\n' +
-                  'Title: ' + __session['current-hit'].Title + '. \n\n' +
-                  'It currently has '+ __session['current-hit'].NumberOfAssignmentsAvailable +
-                  ' assignments remaining.')
-          ) {
-            addAssignmentToHIT(__session['current-hit'].HITId, extend);
-          } else {
-            console.log('increase cancelled');
-          }
-          
-          } else {
-            window.alert('This increase would result in more than 9 assignments for this HIT.\n\n' +
-                'Tasks with less than 10 assignments may not be extended to exceed 9.\n\n' +
-                (current == 9 ? 'No additional assignments can be added for this HIT.' :
-                    ('The maximum increase possible for this HIT is ' + (9 - current) + '.') )
-            );
-            console.log('increase not valid (change of price band)');
-          }
-          
+        var current = __session['current-hit'].MaxAssignments;
+        if (current == 9) {
+          showMessage('Error', 'Tasks with less than 10 assignments may not be extended to exceed 9.<br><br>' +
+              'No additional assignments can be added for this HIT.', 'increase not valid (change of price band)');
         } else {
-          if(!isNaN(extend) && extend != 0) {
-            console.log(extend);
-            window.alert('The number of assignments to be added must be a positive integer number.')
-          }
-          console.log('increase not valid');
+          
+          $('#increase-hit').dialog({
+            height: 175,
+            width: 450,
+            minWidth: 450,
+            modal: true,
+            buttons: {
+              "Add Assignments": function() {
+                confirmIncreaseHit(__session['current-hit'], $('#increase-value').val());
+                $(this).dialog('close');
+              },
+              Cancel: function() {
+                console.log('increase cancel');
+                $(this).dialog('close');
+              }
+            },
+            close: function() {
+              $('#increase-value').val(0);
+            }
+          });
+          
         }
+        
       });
       
       // list submitted only
@@ -482,7 +619,7 @@
             var params = {AssignmentId: checkbox.value, OverrideRejection: true};
             __session['mturk'].approveAssignment(params, function(err, data) {
               if (err) {
-                console.log(err.message);
+                showMessage('API Error', err.message);
               } else { }
               if(index == (visible.length -1)) {
                 __session['hits-age'] = 0;
@@ -494,13 +631,49 @@
             
           });
         } else {
-          window.alert('No assignments selected.');
-          console.log('nothing to approve');
+          showMessage('Error', 'No assignments selected.', 'nothing to approve');
+        }
+      });
+      
+      // message displayed
+      $('#main-assingment-message-displayed').click(function(event) {
+        var workerids = "";
+        var visible = $("#main-assignment-table .assignment .workerid .workerid:visible");
+        if(visible.length) {
+          $.each(visible, function(index, workerid) {
+            workerids += (workerids ? ',' : '') + $(workerid).text();
+          });
+          messageWorkers(null, workerids);
+        } else {
+          showMessage('Error', 'No Worker IDs displayed.', 'nobody to message');
         }
         
       });
       
+      // message all
+      $('#main-assingment-message-all').click(function(event) {
+        var workerids = "";
+        var all = $("#main-assignment-table .assignment .workerid .workerid");
+        if(all.length) {
+          $.each(all, function(index, workerid) {
+            workerids += (workerids ? ',' : '') + $(workerid).text();
+          });
+          messageWorkers(null, workerids);
+        } else {
+          showMessage('Error', 'No workers for this HIT.', 'nobody to message');
+        }
+        
+      });
+      
+      
+      // modal form submit
+      $('#modal-elements form').submit(function(event) { event.preventDefault();} );
+      
+      // ui enhancements
+      
+    
     }
+    
     
     // checkbox helper
     function checkboxHelper(event) {
@@ -513,42 +686,438 @@
     
     // reject assignment
     function rejectAssignment(event, assignment) {
-      var feedback = window.prompt('Please provide feedback to the worker as to the reason for rejection:');
+      
+      $('#reject-assignment').dialog({
+        height: 400,
+        width: 550,
+        minWidth: 500,
+        modal: true,
+        open: function(event, ui) {
+          $('#reject-workerid').val(assignment.WorkerId);
+          $('#reject-assignmentid').val(assignment.AssignmentId);
+        },
+        buttons: {
+          "Reject Assignment": function() {
+            confirmRejectAssignement(assignment, $('#reject-feedback').val());
+            $(this).dialog('close');
+          },
+          Cancel: function() {
+            console.log('reject cancel');
+            $(this).dialog('close');
+          }
+        },
+        close: function() {
+          $('#reject-feedback').val('');
+        }
+      });
+      
+    }
+    
+    // reject assignment confirm
+    function confirmRejectAssignement(assignment, feedback) {
       if(feedback != null && feedback !== '') {
         if(feedback.length <= 1024) {
-          if(
-              window.confirm('Are you sure you wish to reject work by ' + assignment.WorkerId + ' ?\n\n' +
-                  'Assignment: ' + assignment.AssignmentId + '\n\n' +
-                  'Feedback: "' + feedback + '"')
-          ) {
-            $('#main-loading').show();
-            var params = {AssignmentId: assignment.AssignmentId, RequesterFeedback: feedback};
-            __session['mturk'].rejectAssignment(params, function(err, data) {
-              if (err) {
-                console.log(err.message);
-              } else {
-                __session['hits-age'] = 0;
-                __session['assignments-age'] = 0;
-                updateMode();
+          
+          $('#reject-confirm').dialog({
+            minWidth: 500,
+            modal: true,
+            open: function(event, ui) {
+              $('#reject-confirm-workerid').text(assignment.WorkerId);
+              $('#reject-confirm-assignmentid').text(assignment.AssignmentId);
+              $('#reject-confirm-feedback').html(feedback.replace(/\n/g, '<br>'));
+            },
+            buttons: {
+              "Reject Assignment": function() {
+                doRejectAssignment(assignment, feedback);
+                $(this).dialog('close');
+              },
+              Cancel: function() {
+                console.log('reject confirm cancel');
+                $(this).dialog('close');
               }
-              $('#main-loading').hide();
-            });
-          } else {
-            console.log('reject cancelled');
-          }
+            }
+          });
 
         } else {
-          window.alert('Feedback too long.\n\nMaximum feedback length is 1024 characters.');
-          console.log('reject refused - feedback too long');
+          showMessage('Error', 'Feedback too long.<br><br>Maximum feedback length is 1024 characters.',
+              'reject refused - feedback too long');
         }
 
       } else {
         if(feedback != null) {
-          window.alert('Feedback is required.');
-          console.log('reject refused - no feedback');
+          showMessage('Error', 'Feedback is required.', 'reject refused - no feedback');
         } else {
           console.log('reject cancelled');
         }
+      }
+    }
+    
+    // reject assignemnt api call
+    function doRejectAssignment(assignment, feedback) {
+      $('#main-loading').show();
+      var params = {AssignmentId: assignment.AssignmentId, RequesterFeedback: feedback};
+      __session['mturk'].rejectAssignment(params, function(err, data) {
+        if (err) {
+          showMessage('API Error', err.message);
+        } else {
+          __session['hits-age'] = 0;
+          __session['assignments-age'] = 0;
+          updateMode();
+        }
+        $('#main-loading').hide();
+      });
+    }
+    
+    // extend hit confirm
+    function confirmExtendHit(hit, value, multiply) {
+      var expiration = hit.Expiration.getTime();
+      var current = expiration;
+      if(expiration < new Date().getTime()) {
+        expiration = new Date().getTime();
+        current = null;
+      }
+      var extend = parseFloat(value);
+      if(extend > 0 && !isNaN(extend)) {
+        extend *= multiply == 'hours' ? 60 : 1; // mins in an hour
+        extend *= multiply == 'days' ? 1440  : 1; // mins in a day
+        extend *= multiply == 'weeks' ? 10080 : 1; // mins in a week
+        expiration = new Date(expiration + (extend * 60 * 1000)); // milliseconds in a min
+        console.log(expiration);
+        // show confirmation dialog
+        $('#extend-confirm').dialog({
+          modal: true,
+          width: 450,
+          open: function(event, ui) {
+            $('#extend-confirm-current').text(current ? formatDate(current) : 'Expired');
+            $('#extend-confirm-new').text(formatDate(expiration));
+          },
+          buttons: {
+            "Set Expration Time": function() {
+              setHITExpiration(hit.HITId, expiration);
+              $(this).dialog('close');
+            },
+            Cancel: function() {
+              console.log('extend confirm cancel');
+              $(this).dialog('close');
+            }
+          }
+        });
+      } else {
+        console.log(extend);
+        if(isNaN(extend)) {
+          showMessage('Error', 'Extension must be a numerical value.', 'extend error NaN');
+        } else {
+          showMessage('Error', 'Extension must be a greater than zero.', 'extend error (' + value + ')');
+        }
+      }
+      
+    }
+    
+    // increaseHitConfirm
+    function confirmIncreaseHit(hitid, extend) {
+      
+      extend = parseInt(extend);
+
+      if(extend > 0) {
+
+        var current = __session['current-hit'].MaxAssignments;
+
+        if( ! ((current < 10) && ((extend + current) > 9)) ) {
+          // show confirmation dialog
+          $('#increase-confirm').dialog({
+            modal: true,
+            width: 450,
+            open: function(event, ui) {
+              $('#increase-confirm-increase').text(extend);
+              $('#increase-confirm-current').text(current);
+              $('#increase-confirm-new').text(extend + current);
+            },
+            buttons: {
+              "Add Assignments": function() {
+                addAssignmentToHIT(__session['current-hit'].HITId, extend);
+                $(this).dialog('close');
+              },
+              Cancel: function() {
+                console.log('increase confirm cancel');
+                $(this).dialog('close');
+              }
+            }
+          });
+
+        } else {
+          
+          showMessage('Error', 'This increase would result in more than 9 assignments for this HIT.<br><br>' +
+              'Tasks with less than 10 assignments may not be extended to exceed 9.<br><br>' +
+              ('The maximum increase possible for this HIT is ' + (9 - current) + '.'),
+              'increase not valid (change of price band)');
+        }
+
+      } else {
+        if(!isNaN(extend)) {
+          showMessage('Error', 'The number of assignments to be added must be a positive integer number.')
+        }
+        console.log('increase not valid (' + extend + ')');
+      }
+    }
+    
+    // bonus worker
+    function bonusWorker(event, assignment) {
+      var reference = assignment.WorkerId.substr(assignment.WorkerId.length -6, 6) +
+            '-' + assignment.AssignmentId.substr(assignment.AssignmentId.length -6, 6);
+      $('#bonus-worker').dialog({
+        height: 500,
+        width: 550,
+        minWidth: 500,
+        modal: true,
+        open: function(event, ui) {
+          $('#bonus-workerid').val(assignment.WorkerId);
+          $('#bonus-assignmentid').val(assignment.AssignmentId);
+          $('#bonus-reference').val(reference);
+        },
+        buttons: {
+          "Send Bonus": function() {
+            confirmBonusWorker(assignment, $('#bonus-reference').val(), $('#bonus-value').val(),
+                $('#bonus-message').val());
+            $(this).dialog('close');
+          },
+          Cancel: function() {
+            console.log('bonus cancel');
+            $(this).dialog('close');
+          }
+        },
+        close: function() {
+          $('#bonus-value').val('0.00');
+          $('#bonus-message').val('');
+        }
+      });
+    }
+    
+    // bonus worker confirm
+    function confirmBonusWorker(assignment, reference, value, message) {
+      pay = parseInt((parseFloat(value) * 100))/100;
+      if(isNaN(pay)) {
+        console.log('bonus value error  (' + value + ')');
+        pay = 0;
+      }
+      if(message && message.length <= 4096 && pay > 0) {
+        // show confirmation dialog
+        $('#bonus-confirm').dialog({
+          modal: true,
+          open: function(event, ui) {
+            $('#bonus-confirm-workerid').text(assignment.WorkerId);
+            $('#bonus-confirm-assignmentid').text(assignment.AssignmentId);
+            $('#bonus-confirm-value').text(currencyPad(pay));
+            $('#bonus-confirm-message').html(message.replace(/\n/g, '<br>'));
+          },
+          buttons: {
+            "Send Bonus": function() {
+              doBonusWorker(assignment, reference, value, message);
+              $(this).dialog('close');
+            },
+            Cancel: function() {
+              console.log('bonus confirm cancel');
+              $(this).dialog('close');
+            }
+          }
+        });
+      } else {
+        // show error dialog
+        if(!message) {
+          showMessage('Error', 'Messages are required with bonus payments.',
+              'bonus message not specified');
+        }
+        if(message.length > 4096) {
+          showMessage('Error', 'Messages must be shorter than 4,096 characters.',
+              'bonus message too long (' + message.length + ')');
+        }
+        if(pay <= 0) {
+          showMessage('Error', 'Payment value must be positive floating point value.',
+              'bonus value error (' + value + ')');
+        }
+      }
+    }
+    
+    // bonus worker api call
+    function doBonusWorker(assignment, reference, value, message) {
+      $('#main-loading').show();
+      var params = {
+          WorkerId: assignment.WorkerId,
+          AssignmentId: assignment.AssignmentId,
+          BonusAmount: value,
+          Reason: message,
+          UniqueRequestToken: reference
+      };
+      __session['mturk'].sendBonus(params, function(err, data) {
+        if (err) {
+          showMessage('API Error', 'Bonus request failed with error <br><br><em>' + err.message +
+              '</em><br></br>Retrying with the same reference (<em>' + reference+
+              '</em>) will avoid accidental duplicate payments.', err.message);
+        } else {
+          showMessage('Confirmation', 'A bouns of $' + value + ' was sent to worker ' + assignment.WorkerId);
+        }
+        $('#main-loading').hide();
+      });
+    }
+    
+    // message worker
+    function messageWorkers(event, workerids) {
+      $('#message-worker').dialog({
+        height: 400,
+        width: 550,
+        minWidth: 500,
+        modal: true,
+        open: function(event, ui) {
+          $('#message-workerids').val(workerids);
+        },
+        buttons: {
+          "Send Message": function() {
+            confirmMessageWorkers($('#message-workerids').val(), $('#message-subject').val(), $('#message-message').val());
+            $(this).dialog('close');
+          },
+          Cancel: function() {
+            console.log('message cancel');
+            $(this).dialog('close');
+          }
+        },
+        close: function() {
+          $('#message-workerids').val('');
+          $('#message-subject').val('');
+          $('#message-message').val('');
+        }
+      });
+    }
+    
+    // message worker confirm
+    function confirmMessageWorkers(workerids, subject, message) {
+      workerids = workerids.replace(/\s/g, ',').split(',').filter(function(wid) {
+        return (wid !== (undefined || null || ''));
+      });
+      if(workerids.length > 0 && workerids.length <= 100 &&
+          subject && subject.length <= 200 &&
+          message && message.length <= 4096) {
+        // show confirmation dialog
+        $('#message-confirm').dialog({
+          modal: true,
+          open: function(event, ui) {
+            $('#message-confirm-workerids').text(workerids.join(', '));
+            $('#message-confirm-subject').text(subject);
+            $('#message-confirm-message').html(message.replace(/\n/g, '<br>'));
+          },
+          buttons: {
+            "Send Message": function() {
+              doMessageWorkers(workerids, subject, message);
+              $(this).dialog('close');
+            },
+            Cancel: function() {
+              console.log('message confirm cancel');
+              $(this).dialog('close');
+            }
+          },
+          close: function() {
+          }
+        });
+      } else {
+        // show error dialog
+        if(workerids.length < 1) {
+          showMessage('Error', 'A Worker ID is required.',
+              'nobody to message');
+        }
+        if(workerids.length > 100) {
+          showMessage('Error', 'Messaging is limited to 100 workers at a time.',
+              'message to too many workers');
+        }
+        if(!message) {
+          showMessage('Error', 'Message content is required.',
+              'message message not specified');
+        }
+        if(message.length > 4096) {
+          showMessage('Error', 'Messages must be shorter than 4,096 characters.',
+              'message message too long (' + message.length + ')');
+        }
+        if(!subject) {
+          showMessage('Error', 'Subject is required.',
+              'message subject not specified');
+        }
+        if(subject.length > 4096) {
+          showMessage('Error', 'Subject must be shorter than 200 characters.',
+              'message message too long (' + message.length + ')');
+        }
+      }
+    }
+    
+    // message worker api call
+    function doMessageWorkers(workerids, subject, message) {
+      $('#main-loading').show();
+      var params = {MessageText: message, Subject: subject, WorkerIds: workerids};
+      __session['mturk'].notifyWorkers(params, function(err, data) {
+        if (err) {
+          showMessage('API Error', err.message);
+        } else {
+          showMessage('Confirmation', 'Message was sent to ' + workerids.join(', '));
+        }
+        $('#main-loading').hide();
+      });
+    }
+    
+    // preview hit
+    function previewHIT(event, hit) {
+      event.preventDefault();
+      var url = $(event.target).prop('href');
+      $( '#hit-preview' ).dialog({
+        height: (window.innerHeight - 300),
+        width: (window.innerWidth - 300),
+        modal: true,
+        title: (hit.Title + ' (' + hit.HITId + ')'),
+        open: function(event, ui) {
+          $('#hit-preview iframe').prop('src', url);
+        },
+        close: function(event, ui) {
+          $('#hit-preview iframe').prop('src', 'about:blank');
+        },
+        buttons: {
+          "Simulate Accept": function() {
+            var sim= 'SIM' + Date.now();
+            simurl = url.replace('ASSIGNMENT_ID_NOT_AVAILABLE', sim).replace('&source=manage-hits-console', '') +
+              '&workerId=' + sim + '&turkSubmitTo=https%3A%2F%2F' +
+              ( ($('#login-aws-endpoint').val().indexOf('sandbox') > -1) ? 'www' : 'workersandbox') + '.mturk.com' +
+              '&source=manage-hits-console';
+            $('#hit-preview iframe').prop('src', simurl);
+          },
+          "Open in New Window": function() {
+            window.open($('#hit-preview iframe').prop('src'));
+            $(this).dialog('close');
+          },
+          Close: function() {
+            $(this).dialog('close');
+          }
+        }
+      });
+    }
+    
+    function showMessage(title, message, err) {
+      // italicise api errors if not already
+      if (title.toLowerCase().indexOf('api') != -1) {
+        err = err || message;
+        if (message.toLowerCase().indexOf('<em>') == -1) {
+          message = '<em>' + message + '</em>';
+        }
+      }
+      // message error
+      $('#dialog-message').dialog({
+        modal: true,
+        title: title,
+        open: function(event, ui) {
+          $('#dialog-message-message').html(message);
+        },
+        buttons: {
+          OK: function() {
+            $(this).dialog('close');
+          }
+        }
+      });
+      // console log errors
+      if (err) {
+        console.log(err);
       }
     }
     
@@ -559,7 +1128,7 @@
       var params = {HITId: hitid, ExpireAt: timestamp};
       __session['mturk'].updateExpirationForHIT(params, function(err, data) {
         if (err) {
-          console.log(err.message);
+          showMessage('API Error', err.message);
         } else {
           __session['hits-age'] = 0;
           updateMode();
@@ -574,7 +1143,7 @@
       var params = {HITId: hitid, NumberOfAdditionalAssignments: assignments};
       __session['mturk'].createAdditionalAssignmentsForHIT(params, function(err, data) {
         if (err) {
-          console.log(err.message);
+          showMessage('API Error', err.message);
         } else {
           __session['hits-age'] = 0;
           updateMode();
@@ -589,7 +1158,7 @@
       var params = {HITId: hitid};
       __session['mturk'].deleteHIT(params, function(err, data) {
         if (err) {
-          console.log(err.message);
+          showMessage('API Error', err.message);
         } else {
           __session['hits-age'] = 0;
           doList();
@@ -800,7 +1369,8 @@
     // build cache of assignments
     function buildAssignmentCache(hitid, paginationToken) {
       $('#main-loading').show();
-      var params = paginationToken ? {HITId: hitid, MaxResults: 100, NextToken: paginationToken} : {HITId: hitid, MaxResults: 100};
+      var rMax = __session['max-results'] ? __session['max-results'] : 100;
+      var params = paginationToken ? {HITId: hitid, MaxResults: rMax, NextToken: paginationToken} : {HITId: hitid, MaxResults: rMax};
       __session['mturk'].listAssignmentsForHIT(params, function(err, data) {
         if (err) {
           console.log(err.message);
@@ -809,9 +1379,13 @@
           if(data.NumResults) {
             // add this page of results to cache
             __session['assignments'] = __session['assignments'].concat(data.Assignments);
-            // loop
-            buildAssignmentCache(hitid, paginationToken);
-          } else {
+            // loop if we need another page
+            if(data.NumResults == rMax) {
+              buildAssignmentCache(hitid, paginationToken);
+            }
+          }
+          // end of pages
+          if(data.NumResults != rMax) {
             // no more hits to get, render
             renderAssignments();
           }
@@ -866,7 +1440,25 @@
                 )
               )
               // assingment worker id
-              .append( $('<td>').addClass('workerid').text(assignment.WorkerId) )
+              .append(
+                $('<td>').addClass('workerid')
+                .append(
+                  $('<div>').addClass('workerid').text(assignment.WorkerId)
+                )
+                .append(
+                  $('<div>').addClass('worker-actions').append(
+                    $('<a>').addClass('bonus-worker').addClass('clickable')
+                    .addClass('ui-button').addClass('ui-corner-all').addClass('ui-widget')
+                    .click( function(event) { bonusWorker(event, assignment) } )
+                    .text('Bonus')
+                  ).append(
+                    $('<a>').addClass('message-worker').addClass('clickable')
+                    .addClass('ui-button').addClass('ui-corner-all').addClass('ui-widget')
+                    .click( function(event) { messageWorkers(event, assignment.WorkerId) } )
+                    .text('Message')
+                  )
+                )
+              )
               // assignment answers
               .append( $('<td>').addClass('answer')
                 .append(
@@ -894,6 +1486,7 @@
               .append( $('<td>').addClass('reject')
                 .append(
                   $('<a>').addClass('clickable')
+                    .addClass('ui-button').addClass('ui-corner-all').addClass('ui-widget')
                     .click( function(event) { rejectAssignment(event, assignment); } )
                     .text('Reject')
                 )
@@ -998,7 +1591,8 @@
     // build cache of hits
     function buildHITCache(paginationToken) {
       $('#main-loading').show();
-      var params = paginationToken ? {MaxResults: 100, NextToken: paginationToken} : {MaxResults: 100};
+      var rMax = __session['max-results'] ? __session['max-results'] : 100;
+      var params = paginationToken ? {MaxResults: rMax, NextToken: paginationToken} : {MaxResults: rMax};
       __session['mturk'].listHITs(params, function(err, data) {
         if (err) {
           console.log(err.message);
@@ -1008,9 +1602,13 @@
           if(data.NumResults) {
             // add this page of results to cache
             __session['hits'] = __session['hits'].concat(data.HITs);
-            // loop
-            buildHITCache(paginationToken);
-          } else {
+            // loop if there are more results
+            if(data.NumResults == rMax) {
+              buildHITCache(paginationToken);
+            }
+          } 
+          // end of pages
+          if(data.NumResults != rMax) {
             // no more hits to get, render
             renderHITs();
           }
@@ -1060,7 +1658,8 @@
                     .append( $('<strong>').text( hit.Title ) )
                     .append(
                       ( $(question).find('ExternalURL').text() ?
-                            $('<a>').text( '(url)' )
+                            $('<a>').text( '(Preview)' )
+                              .click(function(event) { previewHIT(event, hit); })
                               .prop('target', '_blank')
                               .prop('href', $(question).find('ExternalURL').text() +
                                 ( $(question).find('ExternalURL').text().indexOf('?') > 0 ? '&' : '?' ) +
@@ -1071,7 +1670,7 @@
                     )
                     .append(
                       ( hit.HITStatus == 'Assignable' ?
-                            $('<a>').text( '(mturk)' )
+                            $('<a>').text( '(MTurk)' )
                               .prop('target', '_blank')
                               .prop('href',
                                 'https://worker' +
@@ -1164,12 +1763,7 @@
     
     // format duration
     function formatDuration(s) {
-      return Math.floor(s/60/60) + 'h ' + formatNumber(Math.floor((s/60) % 60)) + 'm ' + formatNumber((s % 60)) + 's';
-    }
-    
-    function formatNumber(n) {
-      n = (n).toString();
-      return n.length == 1 ? '0' + n : n;
+      return Math.floor(s/60/60) + 'h ' + zeroPad(Math.floor((s/60) % 60), 2) + 'm ' + zeroPad((s % 60), 2) + 's';
     }
     
     // format date (flag: 0, utc; 1, iso; 2, amazon)
@@ -1190,10 +1784,22 @@
       return new Date(date).toUTCString();
     }
     
-    function zeroPad(number, len) {
+    // zero pad numbers
+    function zeroPad(number, len, reverse) {
       number = number.toString();
       while(number.length < len) {
-        number = '0' + number;
+        number = reverse ? (number + '0') : ('0' + number);
+      }
+      return number;
+    }
+    
+    // currency pad
+    function currencyPad(number) {
+      number = number.toString().split('.');
+      if(number.length == 1) {
+        number = number[0] + '.00';
+      } else {
+        number = number[0] + '.' + zeroPad(number[1].substring(0,2), 2, true);
       }
       return number;
     }
@@ -1256,7 +1862,7 @@
         <option value="https://mturk-requester-sandbox.us-east-1.amazonaws.com">Sandbox</option>
         <option value="https://mturk-requester.us-east-1.amazonaws.com">Production</option>
       </select>
-      <button id="login-button" type="button">Continue</button>
+      <button id="login-button" type="button" class="ui-button ui-corner-all ui-widget">Continue</button>
     </form>
   </div>
   
@@ -1266,7 +1872,7 @@
       <a id="header-aws">
         <span id="header-aws-endpoint"></span>:
         <span id="header-aws-accessKeyId"></span>
-        <span class="clickable">(change)</span>
+        <span class="clickable ui-button ui-corner-all ui-widget">Change</span>
       </a>
     </div>
     
@@ -1284,7 +1890,7 @@
         <div id="main-list-limit" class="actions">
           Show only:
             <a id="main-list-limit-all">All</a>
-            <a id="main-list-limit-all-active" class="active">(Active)</a>
+            <a id="main-list-limit-all-active" class="active">Active</a>
             <input id="main-list-search" type="text" placeholder="Search All HITs" />
             <div id="main-list-limit-summary">
               Summary:
@@ -1314,12 +1920,12 @@
 
         <div id="main-manage-actions" class="actions">
           Actions:
-            <a id="main-manage-download" class="clickable">Download Data</a>
-            <a id="main-manage-download-amazon" class="amazon clickable">(Amazon)</a>
-            <a id="main-manage-hit-extend" class="clickable">Add Time</a>
-            <a id="main-manage-hit-increase" class="clickable">Add Assignments</a>
-            <a id="main-manage-hit-expire" class="clickable">Expire</a>
-            <a id="main-manage-hit-delete" class="clickable">Delete</a>
+            <a id="main-manage-download" class="clickable ui-button ui-corner-all ui-widget">Download Data</a>
+            <a id="main-manage-download-amazon" class="adjunct clickable ui-button ui-corner-all ui-widget">Amazon</a>
+            <a id="main-manage-hit-extend" class="clickable ui-button ui-corner-all ui-widget">Add Time</a>
+            <a id="main-manage-hit-increase" class="clickable ui-button ui-corner-all ui-widget">Add Assignments</a>
+            <a id="main-manage-hit-expire" class="clickable ui-button ui-corner-all ui-widget">Expire</a>
+            <a id="main-manage-hit-delete" class="clickable ui-button ui-corner-all ui-widget">Delete</a>
         </div>
 
         <h2>Manage Assignments</h2>
@@ -1348,7 +1954,10 @@
           </table>
 
           <div id="main-assignment-actions" class="actions">
-            Actions: <a id="main-assingment-approve-checked" class="clickable">Approve Selected</a>
+            Actions:
+              <a id="main-assingment-approve-checked" class="clickable ui-button ui-corner-all ui-widget">Approve Selected</a>
+              <a id="main-assingment-message-displayed" class="clickable ui-button ui-corner-all ui-widget">Message Displayed</a>
+              <a id="main-assingment-message-all" class="clickable adjunct ui-button ui-corner-all ui-widget">All</a>
           </div>
 
         </form>
@@ -1357,7 +1966,172 @@
       
     </div>
     
-    <div id="footer">
+  </div>
+    
+  <div id="footer">
+  </div>
+    
+  <div id="modal-elements">
+    
+    <div id="dialog-message" title="">
+      <div>
+        <span id="dialog-message-message"></span>
+      </div>
+    </div>
+    
+    <div id="hit-preview" title="Preview HIT">
+      <iframe autofocus="autofocus"></iframe>
+    </div>
+    
+    <div id="bonus-worker" title="Pay Bonus">
+      <form>
+        <label for="bonus-workerid">Worker ID</label>
+        <input type="text" name="bonus-workerid" id="bonus-workerid" disabled="disabled">
+        <label for="bonus-assignmentid">Assignment ID</label>
+        <input type="text" name="bonus-assignmentid" id="bonus-assignmentid" disabled="disabled">
+        <label for="bonus-reference" title="Reference should only be changed if sending a second bonus for this assignment within a 24 hour period.">Reference</label>
+        <input type="text" name="bonus-reference" id="bonus-reference" value="" title="Reference should only be changed if sending a second bonus for this assignment within a 24 hour period.">
+        <label for="bonus-value">Value (USD)</label>
+        <input type="text" name="bonus-value" id="bonus-value" value="0.00" autofocus="autofocus">
+        <label for="bonus-message">Message</label>
+        <textarea name="bonus-message" id="bonus-message" placeholder="Required (Max 4,096 characters)"></textarea>
+        <!-- Allow form submission with keyboard without duplicating the dialog button -->
+        <!-- input type="submit" tabindex="-1" style="position:absolute; top:-1000px" -->
+      </form>
+    </div>
+    
+    <div id="bonus-confirm" title="Confirm Bonus">
+      <div>
+        Pay bonus to worker <span id="bonus-confirm-workerid"></span>?
+      </div>
+      <div>
+        <span>Bonus Amount:</span>
+        <span>$<span id="bonus-confirm-value"></span></span>
+      </div>
+      <div>
+        <span>Message:</span>
+        <span id="bonus-confirm-message" class="message-content"></span>
+      </div>
+    </div>
+    
+    <div id="message-worker" title="Message Workers">
+      <form>
+        <label for="message-workerids" title="Multiple Worker IDs may be specified using space or comma seperation.">Worker IDs</label>
+        <input type="text" name="message-workerids" id="message-workerids" placeholder="Required (Max 100 Worker IDs)" title="Multiple Worker IDs may be specified using space or comma seperation.">
+        <label for="message-subject" autofocus="autofocus">Subject</label>
+        <input type="text" name="message-subject" id="message-subject" placeholder="Required (Max 200 characters)" value="">
+        <label for="message-message">Message</label>
+        <textarea name="message-message" id="message-message" placeholder="Required (Max 4,096 characters)"></textarea>
+        <!-- Allow form submission with keyboard without duplicating the dialog button -->
+        <!-- input type="submit" tabindex="-1" style="position:absolute; top:-1000px" -->
+      </form>
+    </div>
+    
+    <div id="message-confirm" title="Confirm Message">
+      <div>
+        Send message to <span id="message-confirm-workerids"></span>?
+      </div>
+      <div>
+        Subject: <span id="message-confirm-subject"></span>
+      </div>
+      <div>
+        <span>Message:</span>
+        <span id="message-confirm-message" class="message-content"></span>
+      </div>
+    </div>
+    
+    <div id="reject-assignment" title="Reject Assignment">
+      <form>
+        <label for="reject-workerid">Worker ID</label>
+        <input type="text" name="reject-workerid" id="reject-workerid" disabled="disabled">
+        <label for="reject-assignmentid">AssignemntID</label>
+        <input type="text" name="reject-assignmentid" id="reject-assignmentid" disabled="disabled">
+        <label for="reject-feedback">Feedback</label>
+        <textarea name="reject-feedback" id="reject-feedback" autofocus="autofocus" placeholder="Required (Max 1,024 characters)"></textarea>
+        <!-- Allow form submission with keyboard without duplicating the dialog button -->
+        <!-- input type="submit" tabindex="-1" style="position:absolute; top:-1000px" -->
+      </form>
+    </div>
+    
+    <div id="reject-confirm" title="Confirm Rejection">
+      <div>
+        Are you sure you wish to reject work by <span id="reject-confirm-workerid"></span>?
+      </div>
+      <div>
+        Assignment: <span id="reject-confirm-assignmentid"></span>
+      </div>
+      <div>
+        <span>Feedback:</span>
+        <span id="reject-confirm-feedback" class="message-content"></span>
+      </div>
+    </div>
+    
+    <div id="extend-hit" title="Add Time to HIT">
+      <form>
+        <label for="extend-value">Extend by</label>
+        <span class="half">
+          <input type="text" name="extend-value" id="extend-value" placeholder="Required" autofocus="autofocus" value="0">
+          <select id="extend-multiply" name="extend-multiply">
+            <option value="mins">Minutes</option>
+            <option value="hours" selected="selected">Hours</option>
+            <option value="days">Days</option>
+            <option value="weeks">Weeks</option>
+          </select>
+        </span>
+      </form>
+    </div>
+    
+    <div id="extend-confirm"title="Set HIT Expiration">
+      <div>
+        Current HIT expiration: <span id="extend-confirm-current"></span>
+      </div>
+      <div>
+        New HIT expiration: <span id="extend-confirm-new"></span>
+      </div>
+    </div>
+    
+    <div id="increase-hit" title="Add Assignments to HIT">
+      <form>
+        <span class="wide">
+          <label for="increase-value">Additional assignments</label>
+        </span>
+        <span class="half">
+          <input type="text" name="increase-value" id="increase-value" placeholder="Required" autofocus="autofocus" value="0">
+        </span>
+      </form>
+    </div>
+    
+    <div id="increase-confirm"title="Add Assignments to HIT">
+      <div>
+        Add <span id="increase-confirm-increase"></span> assignments to HIT?
+      </div>
+      <div>
+        Current maximum assignments: <span id="increase-confirm-current"></span>
+      </div>
+      <div>
+        New maximum assignments: <span id="increase-confirm-new"></span>
+      </div>
+    </div>
+    
+    <div id="expire-hit" title="Expire HIT">
+      <div>
+        Title: <span id="expire-hit-title"></span>
+      </div>
+      <div>
+        Expiration: <span id="expire-hit-current"></span>
+      </div>
+      <div>
+        Assignments Avaliable: <span id="expire-hit-assignments"></span>
+      </div>
+    </div>
+    
+    <div id="delete-hit" title="Delete HIT">
+      <div>
+        Title: <span id="delete-hit-title"></span>
+      </div>
+      <div>
+        You will no longer be able to manage this HIT or download any response data.
+      </div>
     </div>
     
   </div>

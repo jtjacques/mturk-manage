@@ -23,7 +23,7 @@ The login page allows you to enter your API key and API secret as used to create
 
 These credentials are **not** the username and password used to login at <https://requester.mturk.com>. However, your will have likely already generated appropriate security credentials for use with the tools and frameworks currently being used to create your HITs.
 
-The management interface allows you to select either the [sandbox](https://requestersandbox.mturk.com), or the [production](https://requester.mturk.com) (live) Mechanical Turk service. You may return to the login view by clicking on the *(change)* link in the header at any time.
+The management interface allows you to select either the [sandbox](https://requestersandbox.mturk.com), or the [production](https://requester.mturk.com) (live) Mechanical Turk service. You may return to the login view by clicking on the *Change* link in the header at any time.
 
 If your credentials are not valid, you will be returned to the login page to try again. In addition to incorrect credentials, login may fail for a variety of reasons including not having an *`AmazonMechanicalTurk`* access policy attached to the credentials or, when attempting to access the sandbox, not being registered to do so. Please check the browser console to determine why your login may have failed.
 
@@ -39,7 +39,7 @@ If you do not intend to use the interface to modify HITs or assignments in any w
 ## Manage HITs
 Once you have logged in, the console lists all HITs currently available for the requester.
 
-Loading activity is indicated using an icon in the top right of the management console, under the *(change)* login link.
+Loading activity is indicated using an icon in the top right of the management console, under the *Change* login link.
 
 ### Actions
 Tasks can be filtered both by the *Active* status, where the task requires further human interaction, or using the search box. These filters update the presented list of tasks, and summary data detailed below, immediately.
@@ -48,9 +48,9 @@ Tasks can be filtered both by the *Active* status, where the task requires furth
 
 The *ID* column shows the truncated `HitId`. Selecting this link displays the task specific and Assignment management options, detailed in the *Manage Assignments* section. Despite the truncated display, either a partial or complete `HitId` can be used as the search parameter.
 
-For externally hosted tasks, using an [`ExternalQuestion`](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_ExternalQuestionArticle.html), the a *(url)* link is displayed next to the task title, allowing the task to be easily accessed and viewed. The task is linked as it would be from Amazon Mechanical Turk (including additional URL parameters such as `assignmentId=ASSIGNMENT_ID_NOT_AVAILABLE`), however it is not presented in an `iframe`.
+For externally hosted tasks, using an [`ExternalQuestion`](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_ExternalQuestionArticle.html), the a *(Preview)* link is displayed next to the task title, allowing the task to be easily accessed and viewed. The task is linked as it would be from Amazon Mechanical Turk (including additional URL parameters such as `assignmentId=ASSIGNMENT_ID_NOT_AVAILABLE`), however it is not presented in an `iframe`.
 
-For tasks which have assignments available an *(mturk)* link is shown, allowing the task to be easily found and viewed on Amazon Mechanical Turk.
+For tasks which have assignments available an *(MTurk)* link is shown, allowing the task to be easily found and viewed on Amazon Mechanical Turk.
 
 ### HIT Status
 For ease of recognition, HITs are displayed with various background colours depending on HIT status.
@@ -94,7 +94,7 @@ You can return the HIT overview list at any time by clicking the *Manage HITs* h
 At the task level, the interface offers the following actions.
 
 * *Download Data*: download a CSV file of answer data grouped by and including `QuestionIdentifier` information and Approval/Rejection information. Note that timestamps are exported in ISO format.
-	* *(Amazon)*: download a CSV file of answer data in the original Amazon format, for compatibility. Note that all timestamps are PST, see *Known Issues* for more details.
+	* *Amazon*: download a CSV file of answer data in the original Amazon format, for compatibility. Note that all timestamps are PST, see *Known Issues* for more details.
 * *Add Time*: extend an active HIT, or reactivate an expired one. The extension period is specified in whole number of hours. Alternatively, the duration may be specified in days, using the special suffix `d` (e.g. `14d` can be entered to indicate two weeks instead of `336`).
 	* Note: reactivated task expiration is subject to a small error, see *Known Issues* for more information. 
 * *Add Assignments*: add additional assignments to the HIT.
@@ -120,6 +120,12 @@ At the assignment level, the interface offers the following actions.
 	* Assignments are selected by checking the checkbox to the leftmost column.
 	* All *visible* assignments may be selected at once by using the checkbox in the column header.
 	* Previously rejected assignments may be approved from the *Rejected* or *All* views.
+* *Bonus*: Send a bonus payment to an individual worker.
+* *Message*: Send a message to an individual worker.
+* *Message Displayed*: Send a message to all currently displayed workers.
+	* This action respects the current filter option. For example, to message only *Approved* workers, select the *Approved* filter before choosing this action.
+	* *All*: Send a message to all workers for this HIT.
+		* This action is equivalent to selecting the *All* filter and choosing the *Message Displayed* action. 
 
 ## Known Issues
 * When extending an expired task, the expected expiry time indicated may be slightly inaccurate.
@@ -128,44 +134,70 @@ At the assignment level, the interface offers the following actions.
 	* This is a limitation of Amazon Mechanical Turk. For more information see the [Amazon Mechanical Turk API Reference](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_CreateAdditionalAssignmentsForHITOperation.html).
 * Amazon formatted CSV export using the same timestamp format as the original Amazon Mechanical Turk exports, however all timestamps are exported as PST. Previously, Amazon would report the timestamp in PST (-8 hours) or PDT (-7 hours) as was appropriate to Seattle, Washington. The exported timestamps are calculated using a negative 8 hour offset from UTC, and are always reported in PST regardless of the current DST offset of Amazon HQ.
 	* ISO format example: *2018-01-23T08:27:02.000Z*
-	* From mturk.com: *Tue Jan 23 12:27:02 PST 2018*
+	* *Amazon* format example: *Tue Jan 23 12:27:02 PST 2018*
 
 ## Limitations
 This tool has been developed rapidly, and primarily with the needs of the author in mind.
 
 The interface has only undergone limited testing, primarily with [`ExternalQuestion`](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_ExternalQuestionArticle.html) type HITs and with the [Locale Qualification](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_QualificationRequirementDataStructureArticle.html#ApiReference_QualificationRequirementDataStructureArticle-the-locale-qualification).
 
-* HITs which do not include an [`ExternalURL`](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_ExternalQuestionArticle.html#ApiReference_ExternalQuestionArticle-the-externalquestion-data-structure) will not have a *(url)* link and cannot be previewed when their state is `Unassignable`.
+* HITs which do not include an [`ExternalURL`](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_ExternalQuestionArticle.html#ApiReference_ExternalQuestionArticle-the-externalquestion-data-structure) will not have a *(Preview)* link and cannot be previewed when their state is `Unassignable`.
 * Only three built in qualifications are indicated: *Locale*, to country level; *Masters*; and *Adult*.
 
 Dates and times are shown in the interface in UTC using the [`toUTCString()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toUTCString) method. When exporting data timestamps are reported using ISO or Amazon equivalent formats.
 
-Where existing functionality was retained in the official interface, it is not replicated here. For example, bonus payments may still be made from the official requester [workers page](https://requester.mturk.com/workers).
+Where existing functionality was retained in the official interface, it is not replicated here. For example, blocking workers may still be made from the official requester [workers page](https://requester.mturk.com/workers).
 
 To minimise the number of API calls, the interface caches the HIT and Assignment data for 60 seconds. If you do not wish to change the mode of operation, clicking on the appropriate *All* filter will refresh the cache after this time. The caching period is configured, in the code, using the `__session['refresh-freq']` field and is indicated in milliseconds.
 
 The tool loads all relevant data on each refresh, and does not paginate the results. When managing several hundred tasks or assignments, there may be a small delay in loading the data from the API. Loading activity is indicated in the top right of the console. The tool has been tested, and is functional, with in excess of 350 active tasks loaded.
 
-While HIT *(url)* links do include additional URL parameters such as `assignmentId=ASSIGNMENT_ID_NOT_AVAILABLE` to detect task status, they are not presented in an `iframe`. This may impact functionality of some previews where the HIT presentation is dependant on whether or not the task is being presented inside a frame.
 
-* The *(url)* links additionally include the parameter `source=manage-hits-console` to aid in identification of these previews.
+A maximum of 100 workers may be messaged at once.
+
+* This is the result of a limitation of Amazon Mechanical Turk. For more information see the [Amazon Mechanical Turk API Reference](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_NotifyWorkersOperation.html).
+* Should you have a HIT that has more than 100 workers whom you wish to message, this can be accomplished by downloading the data and pasting the `WorkerId`s into the *Worker IDs* box in groups of up to 100. Each `WorkerId` should be separated using a space or comma (`,`) character.
+
+The order of the parameters specified in *(Preview)* links include the additional parameter `source=manage-hits-console` to aid in identification of previews generated by this tool.
 
 # Development
 
+## Change Log
+
+### 2018-02-02
+* Avoid calling the API where empty results sets will occur.
+	* Only request additional HIT and Assignment results if the API returns the maximum allowed in the previous call.
+* Replaced all `alert` and `prompt` pop-ups with jQuery UI dialogs to allow for richer user interactions.
+	* Added external dependency on jQuery UI (1.12.1)
+* Added `iframe` previews for `ExternalQuestion` HITs
+	* Added simulated acceptance of tasks. 
+* Added worker management features
+	* *Bonus*: Pay workers bonus
+	* *Message*: Send messages to workers
+* Bumped AWS SDK to 2.188.0 (was 2.186.0)
+
+### 2018-01-23
+* Initial release
+
 ## TODOs
-* Investigate alternative login solutions e.g. <https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials-browser.html>
+* Investigate alternative login solutions.
+	* See: [AWS SDK for JavaScript](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials-browser.html)
 * Possible pagination of tasks and assignments.
 * Improve search functionality.
 * Extend and improve qualifications information.
-* Add worker contact and additional management options.
-* Provide `iframe` previews of tasks.
-* Allow direct access to a given `HitId`.
+* ~~Add worker contact and additional management options.~~
+	* Possibly add *Block* functionality.
+* ~~Provide `iframe` previews of tasks.~~
+* Allow direct access to a given `HITId`.
 
 ## Acknowledgements
 This tool is based on, includes, or extends a number of additional resources, acknowledged here.
 
 * jQuery
   * <https://jquery.com>
+  * License: [MIT license](https://jquery.org/license/)
+* jQuery UI
+  * <https://jqueryui.com>
   * License: [MIT license](https://jquery.org/license/)
 * Amazon AWS SDK
   * <https://github.com/aws/aws-sdk-js>
@@ -179,7 +211,6 @@ This tool is based on, includes, or extends a number of additional resources, ac
 	* License: [Public Domain](https://en.wikipedia.org/wiki/en:public_domain)
 
 * Enable JavaScript: <https://enable-javascript.com>
-
 
 ## Contact
 Copyright &copy; 2018, Jason T. Jacques
@@ -195,4 +226,4 @@ CSV file download support is licensed under [cc by-sa 3.0](https://creativecommo
 
 Ajax-loader.gif is [public domain](https://en.wikipedia.org/wiki/en:public_domain), as acknowledged above, and is included under such provision.
 
-Externally loaded resources ([jQuery](https://jquery.org/license/), [AWS SDK](https://github.com/aws/aws-sdk-js/blob/master/LICENSE.txt)) are subject to their own licenses.
+Externally loaded resources ([jQuery](https://jquery.org/license/), [jQuery UI](https://jquery.org/license/), [AWS SDK](https://github.com/aws/aws-sdk-js/blob/master/LICENSE.txt)) are subject to their own licenses.
