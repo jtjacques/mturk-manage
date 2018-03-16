@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   
   <!-- AWS SDK, Amazon: https://github.com/aws/aws-sdk-js -->
-  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.188.0.min.js"></script>
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.210.0.min.js"></script>
 
   <!-- CSV file download support, Xavier John: https://stackoverflow.com/a/24922761 -->
   <script>
@@ -91,6 +91,10 @@
       td.checkbox, td.reject {
         text-align: center;
       }
+      
+        td.reject a {
+          margin-left: 0;
+        }
     
     table div {
       margin: 0.23em 0;
@@ -182,6 +186,11 @@
           text-decoration: none;
           line-height: 1em;
         }
+    
+      #header-aws-balance {
+        font-weight: normal;
+        margin-left: 1em;
+      }
     
     #footer {
       margin-bottom: 65vh;
@@ -458,9 +467,19 @@
         downloadData();
       });
       
+      // all download link
+      $('#main-list-download').click(function(event) {
+        downloadAllData();
+      });
+      
       // download amazon format link
       $('#main-manage-download-amazon').click(function(event) {
         downloadData(true);
+      });
+      
+      // all download amazon format link
+      $('#main-list-download-amazon').click(function(event) {
+        downloadAllData(true);
       });
       
       // expire hit
@@ -512,6 +531,57 @@
               },
               Cancel: function() {
                 console.log('delete cancel');
+                $(this).dialog('close');
+              }
+            }
+          });
+        }
+        
+      });
+      
+      // delete visible hits
+      $('#main-list-hit-delete').click(function(event){
+        var visible = $('#main-list-table .hitid a:visible');
+        
+        if(visible.length == 0) {
+          showMessage('Error', 'There are no visible HITs.', 'all delete none');
+          return;
+        }
+        
+        var errors = 0; var active = 0;
+        $.each(visible, function(index, vhit){
+          $.each(__session['hits'], function(index, hit) {
+            if(hit.HITId == vhit.title) {
+              if(hit.Submitted > 0) {
+                errors++;
+              }
+              if(!$(vhit.parentElement.parentElement).hasClass('ended')) {
+                active++;
+              }
+            }
+          });
+        });
+        
+        if(errors > 0) {
+          showMessage('Error', 'There are unreviewed submissions for ' + errors + ' visible HIT' + (errors > 1 ? 's' : '') + '.', 'all delete refused submission');
+        } else if(active > 0) {
+          showMessage('Error', 'There ' + (active > 1 ? 'are ' : 'is ') + active + ' active visible HIT' + (active > 1 ? 's' : '') + '.', 'all delete refused active');
+        } else {
+          $('#all-delete-hit').dialog({
+            height: 245,
+            width: 450,
+            minwidth: 450,
+            modal: true,
+            open: function(event, ui) {
+              $('#all-delete-hit-title').text('Delete ' + visible.length + ( visible.length > 1 ? ' HITs' : ' HIT') );
+            },
+            buttons: {
+              "Delete HITs": function() {
+                downloadAllData(false, true);
+                $(this).dialog('close');
+              },
+              Cancel: function() {
+                console.log('all delete cancel');
                 $(this).dialog('close');
               }
             }
@@ -1153,15 +1223,17 @@
     }
     
     // delete hit
-    function deleteHIT(hitid) {
+    function deleteHIT(hitid, preventUpdate) {
       $('#main-loading').show();
       var params = {HITId: hitid};
       __session['mturk'].deleteHIT(params, function(err, data) {
         if (err) {
           showMessage('API Error', err.message);
         } else {
-          __session['hits-age'] = 0;
-          doList();
+          if(!preventUpdate){
+            __session['hits-age'] = 0;
+            doList();
+          }
         }
         $('#main-loading').hide();
       });
@@ -1243,6 +1315,7 @@
       
       // restore some defaults
       $('#main-list-limit').show();
+      $('#main-list-actions').show();
       $('#main-list-manage').removeClass('clickable');
       
       // hide modal page elements
@@ -1314,6 +1387,7 @@
       $('#content').show();
       $('#main-list').show();
       $('#main-list-limit').hide();
+      $('#main-list-actions').hide();
       $('#main-manage').show();
       
       // mark header clickable
@@ -1495,17 +1569,91 @@
         
       });
       
-      updateMode();
       
+      // only actually render when needed
+      if(__session['action'] != 'list') {
+        updateMode();
+        // filter list
+        $('#main-manage-assign-' + __session['assignment-mode']).click(); 
+      }
+      
+      // end activity
       $('#main-loading').hide();
-      
-      // filter list
-      $('#main-manage-assign-' + __session['assignment-mode']).click(); 
       
     }
     
+    // download all data
+    function downloadAllData(amazon, rm) {
+      var visible = $('#main-list-table .hitid a:visible');
+      
+      if(visible.length == 0) {
+        showMessage('Error', 'There are no visible HITs.', 'all delete none');
+        return;
+      }
+      
+      var source = [];
+      cacheNextHit(source, visible, amazon, rm);
+    }
+    
+    // cache all hits
+    function cacheNextHit(source, visible, amazon, rm) {
+      $.each(__session['hits'], function(index, hit) {
+        if(hit.HITId == visible[source.length].title) {
+          __session['current-hit'] = hit;
+        }
+      })
+      updateAssignments(visible[source.length].title);
+      addToCache(source, visible, amazon, rm);
+    }
+    
+    // add to cache
+    function addToCache(source, visible, amazon, rm) {
+      setTimeout(function(){
+        if($('#main-loading:visible').length) {
+          addToCache(source, visible, amazon, rm);
+        } else {
+          source.push({
+            "current-hit": JSON.parse(JSON.stringify(__session['current-hit'])), 
+            "assignments": JSON.parse(JSON.stringify(__session['assignments'])) 
+          });
+          if(source.length < visible.length) {
+            cacheNextHit(source, visible, amazon, rm)
+          } else {
+            downloadData(amazon, source);
+            // expire caches
+            __session['assignments-age'] = 0;
+            __session['hits-age'] = 0;
+            // removal (rm) requested
+            if(rm) {
+              $('#all-delete-hit-confirm').dialog({
+                height: 245,
+                width: 450,
+                minwidth: 450,
+                modal: true,
+                open: function(event, ui) {
+                  $('#all-delete-hit-title-confirm').text('Delete ' + visible.length + ( visible.length > 1 ? ' HITs' : ' HIT') );
+                },
+                buttons: {
+                  "Delete HITs": function() {
+                    $.each(visible, function(index, hit){
+                      deleteHIT(hit.title, (index < (visible.length - 1) ));
+                    });
+                    $(this).dialog('close');
+                  },
+                  Cancel: function() {
+                    console.log('all delete final cancel');
+                    $(this).dialog('close');
+                  }
+                }
+              });
+            }
+          }
+        }
+      }, 100);
+    }
+    
     // download data
-    function downloadData(amazon) {
+    function downloadData(amazon, source) {
       
       // amazon uses amazon (2), new uses iso (1)
       var dateFormat = amazon ? 2 : 1;
@@ -1516,52 +1664,72 @@
       var questions = [];
       var data = []; 
       
-      // extract appropriate header information
-      $.each(__session['assignments'], function(index, assignment) {
-        count = count < assignment.Answers.length ? assignment.Answers.length : count;
-        if(!amazon) {
-          $.each(assignment.Answers, function(index, answer){
-            if(questions.indexOf(answer.question) < 0) {
-              questions.push(answer.question);
-            }
-          });
-        }
-      });
+      // use source data or __session data
+      source = source || [__session];
       
-      // generate data rows
-      $.each(__session['assignments'], function(index, assignment) {
-        // save common data
-        var row = [assignment.HITId,
-                   __session['current-hit'].Title,
-                   (__session['current-hit'].RequesterAnnotation ? __session['current-hit'].RequesterAnnotation : ''),
-                   assignment.AssignmentId,
-                   assignment.WorkerId,
-                   assignment.AssignmentStatus,
-                   formatDate(assignment.AcceptTime, dateFormat),
-                   formatDate(assignment.SubmitTime, dateFormat)
-                  ];
-        if(!amazon) {
-          // look for appropriate response
-          $.each(questions, function(index, question) {
-            var response = '';
+      // validate title
+      var title = source.length == 1 ? source[0]['current-hit'].HITId : source.length + 'Tasks';
+      var name = null;
+      if(source.length > 1) {
+        name = source[0]['current-hit'].Title;
+        $.each(source, function(index, assignments) {
+          if(name != assignments['current-hit'].Title) {
+            name = null;
+          }
+        })
+      }
+      title = (name || title).replace(/[^a-zA-Z0-9\\-]/g, '');
+      
+      $.each(source, function(index, assignments){
+      
+        // extract appropriate header information
+        $.each(assignments['assignments'], function(index, assignment) {
+          count = count < assignment.Answers.length ? assignment.Answers.length : count;
+          if(!amazon) {
             $.each(assignment.Answers, function(index, answer){
-              if(question == answer.question) {
-                response = answer.response;
+              if(questions.indexOf(answer.question) < 0) {
+                questions.push(answer.question);
               }
             });
-            row.push(response);
-          });
-          // approve/reject time
-          row.push(formatDate((assignment.ApprovalTime ? assignment.ApprovalTime : assignment.RejectionTime), dateFormat));
-        } else {
-          // save in order
-          $.each(assignment.Answers, function(index, answer){
-            row.push(answer.response);
-          });
-        }
-        data.push(row);
-      });
-      
+          }
+        });
+
+        // generate data rows
+        $.each(assignments['assignments'], function(index, assignment) {
+          // save common data
+          var row = [assignment.HITId,
+                     assignments['current-hit'].Title,
+                     (assignments['current-hit'].RequesterAnnotation ? assignments['current-hit'].RequesterAnnotation : ''),
+                     assignment.AssignmentId,
+                     assignment.WorkerId,
+                     assignment.AssignmentStatus,
+                     formatDate(assignment.AcceptTime, dateFormat),
+                     formatDate(assignment.SubmitTime, dateFormat)
+                    ];
+          if(!amazon) {
+            // look for appropriate response
+            $.each(questions, function(index, question) {
+              var response = '';
+              $.each(assignment.Answers, function(index, answer){
+                if(question == answer.question) {
+                  response = answer.response;
+                }
+              });
+              row.push(response);
+            });
+            // approve/reject time
+            row.push(formatDate((assignment.ApprovalTime ? assignment.ApprovalTime : assignment.RejectionTime), dateFormat));
+          } else {
+            // save in order
+            $.each(assignment.Answers, function(index, answer){
+              row.push(answer.response);
+            });
+          }
+          data.push(row);
+        });
+        
+      })
+
       // finalise headers
       if(amazon) {
         for(var i = 1; i <= count; i++) {
@@ -1577,7 +1745,7 @@
       csv = csv.concat(data);
       
       // download file
-      exportToCsv('HITResultsFor' + __session['current-hit'].HITId + '.csv', csv);
+      exportToCsv('HITResultsFor' + title + '.csv', csv);
     }
     
     // update stored hits
@@ -1585,6 +1753,16 @@
       // clear stored hits
       __session['hits'] = [];
       __session['hits-age'] = Date.now();
+      __session['mturk'].getAccountBalance({}, function(err, data) {
+        if (err) {
+          console.log(err.message);
+          updateMode('login');
+        } else {
+          if(data.AvailableBalance) {
+            $('#header-aws-balance').text('($'+ data.AvailableBalance + ')');
+          }
+        }
+      });
       buildHITCache(false);
     }
     
@@ -1606,7 +1784,7 @@
             if(data.NumResults == rMax) {
               buildHITCache(paginationToken);
             }
-          } 
+          }
           // end of pages
           if(data.NumResults != rMax) {
             // no more hits to get, render
@@ -1872,6 +2050,7 @@
       <a id="header-aws">
         <span id="header-aws-endpoint"></span>:
         <span id="header-aws-accessKeyId"></span>
+        <span id="header-aws-balance"></span>
         <span class="clickable ui-button ui-corner-all ui-widget">Change</span>
       </a>
     </div>
@@ -1912,6 +2091,14 @@
 
           <tr id="main-list-table-none"><td colspan="5">No tasks to display</td></tr>
         </table>
+      
+
+        <div id="main-list-actions" class="actions">
+          Actions (all visible HITs):
+            <a id="main-list-download" class="clickable ui-button ui-corner-all ui-widget">Download Data</a>
+            <a id="main-list-download-amazon" class="adjunct clickable ui-button ui-corner-all ui-widget">Amazon</a>
+            <a id="main-list-hit-delete" class="clickable ui-button ui-corner-all ui-widget">Delete</a>
+        </div>
       
       </div>
       
@@ -1966,9 +2153,11 @@
       
     </div>
     
-  </div>
+  
+  
+    <div id="footer">
+    </div>
     
-  <div id="footer">
   </div>
     
   <div id="modal-elements">
@@ -2131,6 +2320,30 @@
       </div>
       <div>
         You will no longer be able to manage this HIT or download any response data.
+      </div>
+    </div>
+    
+    <div id="all-delete-hit" title="Delete Visible HITs">
+      <div>
+        <strong><span id="all-delete-hit-title"></span></strong>
+      </div>
+      <div>
+        You will no longer be able to manage or download any response data for these HITs.
+      </div>
+      <div>
+        To avoid data loss, all data will be downloaded prior to deletion. 
+      </div>
+    </div>
+    
+    <div id="all-delete-hit-confirm" title="Confirm Delete Visible HITs">
+      <div>
+        <strong>Final confirmation:</strong>
+      </div>
+      <div>
+        <strong><span id="all-delete-hit-title-confirm"></span></strong>
+      </div>
+      <div>
+        You will no longer be able to manage or download any response data for these HITs.
       </div>
     </div>
     
