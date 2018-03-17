@@ -1680,9 +1680,9 @@
       }
       title = (name || title).replace(/[^a-zA-Z0-9\\-]/g, '');
       
+      // extract appropriate header information
+      // -- seperated so that proper headers for all data generated first
       $.each(source, function(index, assignments){
-      
-        // extract appropriate header information
         $.each(assignments['assignments'], function(index, assignment) {
           count = count < assignment.Answers.length ? assignment.Answers.length : count;
           if(!amazon) {
@@ -1693,7 +1693,10 @@
             });
           }
         });
-
+      });
+      
+      // extract row data
+      $.each(source, function(index, assignments){
         // generate data rows
         $.each(assignments['assignments'], function(index, assignment) {
           // save common data

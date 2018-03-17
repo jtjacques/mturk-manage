@@ -188,6 +188,9 @@ The parameters specified in *(Preview)* links include the additional parameter `
 
 ## Change Log
 
+### 2018-03-17
+* Fixed bug in overview *Download* functionality where headers may be misaligned in cases where column names differ between visible tasks.
+
 ### 2018-03-16
 * Added overview level actions: *Download*, *Amazon*, and *Delete*.
 * Added account balance to header.
