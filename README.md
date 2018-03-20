@@ -5,11 +5,17 @@ mturk-manage.html reproduces some of the basic functionality offered by the *Man
 
 The tool broadly replicates the functionality and layout of the discontinued interface, and is designed to be familiar to those who have previous experience managing HITs.
 
-**There is nothing to install.** The interface runs *locally* in the browser, and has only two external dependencies, [jQuery and jQuery UI](https://code.jquery.com) and the [Amazon AWS SDK](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/loading-the-jssdk.html), which are loaded automatically.
+**There is nothing to install.** The interface runs *locally* in the browser, and has only three external dependencies, the [Amazon AWS SDK](https://aws.amazon.com/sdk-for-browser/), [jQuery and jQuery UI](https://code.jquery.com/), and [AlaSQL](http://alasql.org/), which are loaded automatically.
+
+## Security
+
+To minimise the security implications of automatically downloading and including third-party code, all external dependencies include an `SHA-512` `integrity` property to allow the browser to ensure they have not been tampered with.
+
+To minimise the risk of your credentials being leaked, it is recommended that this tool is used with a browser that supports the [Subresource Integrity](https://www.w3.org/TR/SRI/) mechanism. At the time of writing the integrity of external resources is currently validated by [Chrome](https://www.google.com/chrome/), [Firefox](https://firefox.com/), and [Opera](https://www.opera.com/).
 
 **While the management console does not store credentials, or send them to any third party, you accept all liability for the security of your access credentials when using them with this tool.**
 
-Guidance on limiting the access of your credentials is offered in the *Login* section.
+Additional guidance on limiting the access of your credentials is offered in the *Login* section.
 
 # Usage
 Download [mturk-manage.html](https://github.com/jtjacques/mturk-manage/releases) to your local file storage, and open the file in your browser.
@@ -51,7 +57,9 @@ Loading activity is indicated using an icon in the top right of the management c
 ### Actions
 Tasks can be filtered both by the *Active* status, where the task requires further human interaction, or using the search box. These filters update the presented list of tasks, and summary data detailed below, immediately.
 
-* Note: search text is used in its entirety, e.g. *"my task"* will **not** match *"my second task"*.
+* Search text is case-insensitive and space-separated. The search will match the full `HITId` or any other terms visible in each row.
+* To match multi-word phrases, use double quotes (`"`). e.g. the search `my task` will match `my second task` but `"my task"` will **not**.
+* Search terms can be negated by prefixing them with a single dash (`-`). e.g. the search `-"a task"` will hide all rows containing the phrase `a task`.
 
 The *ID* column shows the truncated `HitId`. Selecting this link displays the task specific and Assignment management options, detailed in the *Manage Assignments* section. Despite the truncated display, either a partial or complete `HitId` can be used as the search parameter.
 
@@ -140,7 +148,7 @@ At the assignment level, the interface offers the following actions.
 	* Bonus payments can only be sent to workers who have carried out tasks in the last six months and in relation to a specific assignment.
 	* Bonus payments require a bonus value, in US dollars, and a message explaining the reason for the payment.
 		* Note that bonus payments are subject to an [Amazon fee](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_SendBonusOperation.html), similar to the fee charged on the assignment itself.
-	* A payment reference is available which must be unique for each payment in a 24 hour period. This defaults to the last six characters of the `WorkerId` and the last six characters of the `AssignmentId`, separated by a hyphen (`-`). In the event that a bonus payment fails, it can be resent with the same refernce without the risk of making the payment twice. Should you wish to send a second bonus to the same worker, for the same assignment, in a 24 hour period the reference should be changed.
+	* A payment reference is available which must be unique for each payment in a 24 hour period. This defaults to the last six characters of the `WorkerId` and the last six characters of the `AssignmentId`, separated by a hyphen (`-`). In the event that a bonus payment fails, it can be resent with the same reference without the risk of making the payment twice. Should you wish to send a second bonus to the same worker, for the same assignment, in a 24 hour period the reference should be changed.
 * *Message*: Send a message to an individual worker.
 	* Messages can be sent to multiple workers at the same time, the `WorkerID` should be space or comma (`,`) separated, subject to a limit of 100 workers (See *Limitations* for more details).
 	* Messages require a subject (of up to 200 characters) and message content (up to 4,096 characters).
@@ -169,9 +177,9 @@ The interface has only undergone limited testing, primarily with [`ExternalQuest
 
 Dates and times are shown in the interface in UTC using the [`toUTCString()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toUTCString) method. When exporting data timestamps are reported using ISO or Amazon equivalent formats.
 
-Where existing functionality was retained in the official interface, it is not replicated here. For example, blocking workers may still be done from the official requester [workers page](https://requester.mturk.com/workers).
+Where existing functionality was retained in the official interface, it may not be replicated here. For example, blocking workers may still be done from the official requester [workers page](https://requester.mturk.com/workers).
 
-To minimise the number of API calls, the interface caches the HIT and Assignment data for 60 seconds. If you do not wish to change the mode of operation, clicking on the appropriate *All* filter will refresh the cache after this time. The caching period is configured, in the code, using the `__session['refresh-freq']` field and is indicated in milliseconds.
+To minimise the number of API calls, the interface caches the HIT and Assignment data for 5 minutes. If you wish to manually refresh the results, you may click the on screen refresh icon to the right of the search field and assignment filters.
 
 The tool loads all relevant data on each refresh, and does not paginate the results. When managing several hundred tasks or assignments, there may be a small delay in loading the data from the API. Loading activity is indicated in the top right of the console. The tool has been tested, and is functional, with in excess of 350 active tasks loaded.
 
@@ -187,6 +195,17 @@ The parameters specified in *(Preview)* links include the additional parameter `
 # Development
 
 ## Change Log
+
+### 2018-03-20
+* Switched to MIT License.
+	* Removed cc-by-sa 3.0 licensed CSV export code.
+	* Added external dependency on AlaSQL (0.4.5).
+* Improved search functionality.
+	* Search now matches all terms, but in any order, and allows quoting.
+* Added manual refresh functionality.
+	* Lengthened default refresh to 5 minutes.
+* Added SRI hashes to all third-party external resources.
+* Bumped AWS SDK to 2.211.1 (was 2.210.0)
 
 ### 2018-03-17
 * Fixed bug in overview *Download* functionality where headers may be misaligned in cases where column names differ between visible tasks.
@@ -220,7 +239,7 @@ The parameters specified in *(Preview)* links include the additional parameter `
 * Investigate alternative login solutions.
 	* See: [AWS SDK for JavaScript](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials-browser.html)
 * Possible pagination of tasks and assignments.
-* Improve search functionality.
+* ~~Improve search functionality.~~
 * Extend and improve qualifications information.
 * Possible task creation support.
 * ~~Add worker contact and additional management options.~~
@@ -229,39 +248,48 @@ The parameters specified in *(Preview)* links include the additional parameter `
 * Allow direct access to a given `HITId`.
 
 ## Acknowledgements
-This tool is based on, includes, or extends a number of additional resources, acknowledged here.
+This tool is based on, includes, links to, or extends a number of additional resources. These are acknowledged here.
 
-* jQuery
-  * <https://jquery.com>
-  * License: [MIT license](https://jquery.org/license/)
-* jQuery UI
-  * <https://jqueryui.com>
-  * License: [MIT license](https://jquery.org/license/)
 * Amazon AWS SDK
-  * <https://github.com/aws/aws-sdk-js>
-  * License: [Apache License 2.0](https://github.com/aws/aws-sdk-js/blob/master/LICENSE.txt)
+  	* Amazon.com, Inc. 
+  	* <https://github.com/aws/aws-sdk-js>
+  	* License: [Apache License 2.0](https://github.com/aws/aws-sdk-js/blob/master/LICENSE.txt)
+* jQuery
+  	* JS Foundation 
+  	* <https://jquery.com>
+  	* License: [MIT License](https://jquery.org/license/)
+* jQuery UI
+  	* JS Foundation 
+  	* <https://jqueryui.com>
+  	* License: [MIT License](https://jquery.org/license/)
+* AlaSQL
+	* Andrey Gershun
+  	* <https://github.com/agershun/alasql>
+  	* License: [MIT License](https://github.com/agershun/alasql/blob/develop/LICENSE)
 
-* CSV file download support, Xavier John
-  * <https://stackoverflow.com/a/24922761>
-  * License: [cc by-sa 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
-* Ajax-loader.gif, optimised, base64 encoded
+* Ajax-loader.gif (optimised, base64 encoded, embedded)
+	* ajaxload.info (<http://www.ajaxload.info>)
 	* <https://commons.wikimedia.org/wiki/File:Ajax-loader.gif>
-	* License: [Public Domain](https://en.wikipedia.org/wiki/en:public_domain)
+	* License: [Public Domain](https://commons.wikimedia.org/wiki/File:Ajax-loader.gif#Licensing)
+* Reload (embedded)
+	* David Merfield
+	* <http://publicicons.org/reload-icon/>
+	* License [Public Domain](http://publicicons.org/license/)
 
 * Enable JavaScript: <https://enable-javascript.com>
 
 ## Contact
-Copyright &copy; 2018, Jason T. Jacques
+Copyright &copy; 2018 Jason T. Jacques
 
 * Email: [jtjacques@gmail.com](mailto:jtjacques@gmail.com?subject=mturk-manage.html)
 * Web: [jsonj.co.uk](https://jsonj.co.uk)
 
 ## Licenses
 
-mturk-manage.html is licensed under [cc by-sa 3.0](https://creativecommons.org/licenses/by-sa/3.0/) to comply with licenses of included components.
-
-CSV file download support is licensed under [cc by-sa 3.0](https://creativecommons.org/licenses/by-sa/3.0/), as acknowledged above, and included under such provision.
+mturk-manage.html is released under the terms of the [MIT License](https://github.com/jtjacques/mturk-manage/blob/master/LICENSE).
 
 Ajax-loader.gif is [public domain](https://en.wikipedia.org/wiki/en:public_domain), as acknowledged above, and is included under such provision.
 
-Externally loaded resources ([jQuery](https://jquery.org/license/), [jQuery UI](https://jquery.org/license/), [AWS SDK](https://github.com/aws/aws-sdk-js/blob/master/LICENSE.txt)) are subject to their own licenses.
+Reload icon is [public domain](http://publicicons.org/license/), as acknowledged above, and is included under such provision.
+
+Externally loaded resources ([AWS SDK](https://github.com/aws/aws-sdk-js/blob/master/LICENSE.txt), [jQuery](https://jquery.org/license/), [jQuery UI](https://jquery.org/license/), [AlaSQL](https://github.com/agershun/alasql/blob/develop/LICENSE)) are subject to their own licenses.
