@@ -288,7 +288,7 @@ Copyright &copy; 2018 Jason T. Jacques
 
 mturk-manage.html is released under the terms of the [MIT License](https://github.com/jtjacques/mturk-manage/blob/master/LICENSE).
 
-Ajax-loader.gif is [public domain](https://en.wikipedia.org/wiki/en:public_domain), as acknowledged above, and is included under such provision.
+Ajax-loader.gif is [public domain](https://commons.wikimedia.org/wiki/File:Ajax-loader.gif#Licensing), as acknowledged above, and is included under such provision.
 
 Reload icon is [public domain](http://publicicons.org/license/), as acknowledged above, and is included under such provision.
 
