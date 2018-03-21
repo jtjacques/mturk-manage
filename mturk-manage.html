@@ -85,7 +85,60 @@
         display: inline-block;
         width: 0;
         overflow: hidden;
+        padding: 0 !important;
+        margin: 0 !important;
       }
+    
+      table .hitid a, table .assignmentid > span {
+        /* make hover events work slightly to the right */
+        padding-right: 2em;
+        margin-right: -2em;
+      }
+    
+      table a .hover-only, table .assignmentid span .hover-only {
+        position: absolute;
+        margin-left: 5em;
+        margin-top: -2.5em;
+        z-index: 100;
+        background-color: white;
+        color: black;
+        border: 0.1em solid silver;
+        font-size: 90%;
+        cursor: default;
+        
+        display: none;
+      }
+    
+      table .assignmentid > span .hover-only {
+        margin-top: -1.9em;
+        margin-left: -1.5em;
+        font-size: 100%;
+      }
+    
+      table a:hover .hover-only, table .assignmentid span:hover .hover-only {
+        display: block;
+      }
+    
+        table a .hover-only span, table .assignmentid span .hover-only span {
+          display: block;
+          margin: 0.75em 1em;
+        }
+    
+          table a .hover-only span:before {
+            padding-right: 0.25em;
+          }
+    
+          table a .hover-only span.hover-hit-id:before {
+            content: 'HIT ID:';
+          }
+    
+          table a .hover-only span.hover-group-id:before {
+            content: 'Group ID:';
+          }
+    
+          table a .hover-only span.hover-type-id:before {
+            content: 'Type ID:';
+          }
 
       td.checkbox, td.reject {
         text-align: center;
@@ -1565,11 +1618,17 @@
               .append( $('<td>').addClass('assignmentid')
                 .append($('<span>').addClass('search-only').text(assignment.AssignmentId))
                 .append(
-                  $('<span>').prop('title', assignment.AssignmentId)
+                  $('<span>')
+                    //.prop('title', assignment.AssignmentId)
                     .text('...' + assignment.AssignmentId.substr(assignment.AssignmentId.length -6, 6))
+                    .append(
+                      $('<span>').addClass('hover-only')
+                        .append($('<span>').addClass('hover-assignment-id').text(assignment.AssignmentId))
+                        .click( function(event) { event.preventDefault(); event.stopPropagation(); } )
+                    )
                 )
               )
-              // assingment worker id
+              // assignment worker id
               .append(
                 $('<td>').addClass('workerid')
                 .append(
@@ -1881,11 +1940,20 @@
               // hit id
               .append( $('<td>').addClass('hitid')
                 .append($('<span>').addClass('search-only').text(hit.HITId))
+                .append($('<span>').addClass('search-only').text(hit.HITTypeId))
+                .append($('<span>').addClass('search-only').text(hit.HITGroupId))
                 .append(
                   $('<a>').addClass('clickable')
                     .click( function(event) { manageHIT(event, hit); } )
-                    .prop('title', hit.HITId)
+                    //.prop('title', hit.HITId)
                     .text('...' + hit.HITId.substr(hit.HITId.length -6, 6))
+                    .append(
+                      $('<span>').addClass('hover-only')
+                        .append($('<span>').addClass('hover-hit-id').text(hit.HITId))
+                        .append($('<span>').addClass('hover-type-id').text(hit.HITTypeId))
+                        .append($('<span>').addClass('hover-group-id').text(hit.HITGroupId))
+                        .click( function(event) { event.preventDefault(); event.stopPropagation(); } )
+                    )
                 )
               )
               // hit description
