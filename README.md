@@ -13,6 +13,8 @@ To minimise the security implications of automatically downloading and including
 
 To minimise the risk of your credentials being leaked, it is recommended that this tool is used with a browser that supports the [Subresource Integrity](https://www.w3.org/TR/SRI/) mechanism. At the time of writing the integrity of external resources is currently validated by [Chrome](https://www.google.com/chrome/), [Firefox](https://firefox.com/), and [Opera](https://www.opera.com/).
 
+For security reasons, using copies hosted on a web-server is **not** recommended as they may be subject to tampering and increase the likelihood of your security credentials being intercepted and stolen.
+
 **While the management console does not store credentials, or send them to any third party, you accept all liability for the security of your access credentials when using them with this tool.**
 
 Additional guidance on limiting the access of your credentials is offered in the *Login* section.
@@ -20,9 +22,7 @@ Additional guidance on limiting the access of your credentials is offered in the
 # Usage
 Download [mturk-manage.html](https://github.com/jtjacques/mturk-manage/releases) to your local file storage, and open the file in your browser.
 
-The interface runs directly on your computer and untrusted copies should not be used.
-
-For security reasons, using copies hosted on a web-server is **not** recommended as they may be subject to tampering and increase the likelihood of your security credentials being intercepted and stolen.
+The interface runs directly on your computer and untrusted copies, including copies hosted on web-servers, should not be used.
 
 ## Login
 The login page allows you to enter your API key and API secret as used to create and manage tasks. You will need to enter your AWS *access key ID* and *secret access key*. e.g.
@@ -30,7 +30,7 @@ The login page allows you to enter your API key and API secret as used to create
 * Sample access key ID: AKIAIOSFODNN7EXAMPLE
 * Sample secret access key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
-*These credentials are examples only, reproduced from the [Amazon Mechanical Turk Getting Started Guide](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMechanicalTurkGettingStartedGuide/SetUp.html#aws-security-credentials) and are non-functional.*
+*These credentials are examples only, reproduced from the [Amazon Mechanical Turk Getting Started Guide](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMechanicalTurkGettingStartedGuide/SetUp.html#aws-security-credentials), and are non-functional.*
 
 These credentials are **not** the username and password used to login at <https://requester.mturk.com>. However, your will have likely already generated appropriate security credentials for use with the tools and frameworks currently being used to create your HITs.
 
@@ -54,18 +54,27 @@ Once you have logged in, the console lists all HITs currently available for the 
 
 Loading activity is indicated using an icon in the top right of the management console, under the *Change* login link.
 
-### Actions
+### Finding & Viewing Tasks
 Tasks can be filtered both by the *Active* status, where the task requires further human interaction, or using the search box. These filters update the presented list of tasks, and summary data detailed below, immediately.
 
-* Search text is case-insensitive and space-separated. The search will match the full `HITId` or any other terms visible in each row.
+* Search text is case-insensitive and space-separated. The search will match the full `HitId` or any other terms visible in each row.
 * To match multi-word phrases, use double quotes (`"`). e.g. the search `my task` will match `my second task` but `"my task"` will **not**.
 * Search terms can be negated by prefixing them with a single dash (`-`). e.g. the search `-"a task"` will hide all rows containing the phrase `a task`.
 
-The *ID* column shows the truncated `HitId`. Selecting this link displays the task specific and Assignment management options, detailed in the *Manage Assignments* section. Despite the truncated display, either a partial or complete `HitId` can be used as the search parameter.
+The *ID* column shows the truncated `HitId`. Selecting this link displays the task specific and Assignment management options, detailed in the *Manage Assignments* section. Hovering over this link displays the full `HitId`, `HitTypeId`, and `HitGroupId` for this task. Despite the truncated display, either a partial or complete `*Id` can be used as the search parameter.
 
 For externally hosted tasks, using an [`ExternalQuestion`](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_ExternalQuestionArticle.html), the a *(Preview)* link is displayed next to the task title, allowing the task to be easily accessed and viewed. The task is linked as it would be from Amazon Mechanical Turk (including additional URL parameters such as `assignmentId=ASSIGNMENT_ID_NOT_AVAILABLE`).
 
 For tasks which have assignments available an *(MTurk)* link is shown, allowing the task to be easily found and viewed on Amazon Mechanical Turk.
+
+### Multi-HIT Actions
+At the overview level, the interface offers the following actions which affect all visible HITs. These actions respect the *Active* filter or currently set search value.
+
+* *Download Data*: download a CSV file of answer data grouped by and including `QuestionIdentifier` information and Approval/Rejection information for all visible HITs. Note that timestamps are exported in ISO format.
+	* *Amazon*: download a CSV file of answer data in the original Amazon format, for compatibility. Note that all timestamps are PST, see *Known Issues* for more details.
+* *Delete*: delete all visible HITs.
+	* Note: only HITs which are `Unassignable`, expired or having no available tasks, and for which all assignments have been reviewed may be deleted. Any visible HITs which are ineligible will prevent this action.
+	* Note: a download of all data is forced before final confirmation and actual removal of the HITs.
 
 ### HIT Status
 For ease of recognition, HITs are displayed with various background colours depending on HIT status.
@@ -105,15 +114,6 @@ The *Manage Assignments* interface includes both HIT specific management actions
 
 You can return the HIT overview list at any time by clicking the *Manage HITs* header.
 
-### Overview Level Actions
-At the overview level, the interface offers the following actions which affect all visible HITs. These actions respect the *Active* filter or currently set search value.
-
-* *Download Data*: download a CSV file of answer data grouped by and including `QuestionIdentifier` information and Approval/Rejection information for all visible HITs. Note that timestamps are exported in ISO format.
-	* *Amazon*: download a CSV file of answer data in the original Amazon format, for compatibility. Note that all timestamps are PST, see *Known Issues* for more details.
-* *Delete*: delete all visible HITs.
-	* Note: only HITs which are `Unassignable`, expired or having no available tasks, and for which all assignments have been reviewed may be deleted. Any visible HITs which are ineligible will prevent this action.
-	* Note: a download of all data is forced before final confirmation and actual removal of the HITs.
-
 ### Task Level Actions
 At the task level, the interface offers the following actions.
 
@@ -129,6 +129,8 @@ At the task level, the interface offers the following actions.
 
 ### Assignment Level Actions
 Assignments can be filtered by status, `Submitted`, `Approved`, `Rejected`, or *All*. By default, only the submitted assignments are shown as these require requester attention.
+
+The *ID* column shows the truncated `AssignmentId`. Hovering over this link displays the full `AssignmentId`.
 
 Assignments are displayed with various background colours depending on their status.
 
@@ -195,6 +197,11 @@ The parameters specified in *(Preview)* links include the additional parameter `
 # Development
 
 ## Change Log
+
+### 2018-03-21
+* Added `HitId`, `HitTypeID`, `HitGroupId`, and `AssignmentId` hover-over tool tips.
+* Minor documentation changes.
+* Bumped AWS SDK to 2.212.1 (was 2.211.1)
 
 ### 2018-03-20
 * Switched to MIT License.
