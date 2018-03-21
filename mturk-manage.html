@@ -1381,7 +1381,7 @@
       // change mode
       switch(__session['action']) {
         case 'manage':
-          doManage();
+          doManage(refresh);
           break;
         case 'list':
           doList(refresh);
@@ -1438,7 +1438,7 @@
     }
     
     // manage mode
-    function doManage() {
+    function doManage(refresh) {
       $('#content').show();
       $('#main-list').show();
       $('#main-list-limit').hide();
@@ -1448,8 +1448,8 @@
       // mark header clickable
       $('#main-list-manage').removeClass('clickable').addClass('clickable');
 
-      // refresh hits
-      if(doRefresh(__session['hits-age'])) {
+      // refresh hits, unless assignment refresh req.
+      if(!refresh && doRefresh(__session['hits-age'])) {
         updateHITs();
       }
 
@@ -2136,7 +2136,7 @@
             <a id="main-list-limit-all">All</a>
             <a id="main-list-limit-all-active" class="active">Active</a>
             <input id="main-list-search" type="text" placeholder="Search All HITs" />
-            <a id="main-list-refresh">
+            <a id="main-list-refresh" title="refresh HITs">
               <!-- Reload, David Merfield: http://publicicons.org/reload-icon/ -->
               <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
                    width="120px" height="120px" viewBox="0 0 120 120" enable-background="new 0 0 120 120" xml:space="preserve">
@@ -2202,7 +2202,7 @@
             <a id="main-manage-assign-approved">Approved</a>
             <a id="main-manage-assign-rejected">Rejected</a>
             <a id="main-manage-assign-all">All</a>
-            <a id="main-manage-refresh">
+            <a id="main-manage-refresh" title="refresh assignments">
               <!-- Reload, David Merfield: http://publicicons.org/reload-icon/ -->
               <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
                    width="120px" height="120px" viewBox="0 0 120 120" enable-background="new 0 0 120 120" xml:space="preserve">
