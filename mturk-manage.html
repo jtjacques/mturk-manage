@@ -70,6 +70,11 @@
       flex: 1 0 auto;
       margin: 0.75em;
     }
+    
+    #content {
+      min-height: 100%;
+      margin-bottom: 7.5em;
+    }
 
     table {
         border-collapse: collapse;
@@ -249,7 +254,6 @@
       opacity: 0.60;
       font-size: 80%;
       padding: 1em;
-      margin-top: 5em;
       flex-shrink: 0;
       text-align: right;
       box-sizing: border-box;
@@ -257,9 +261,21 @@
     }
     
     #main-loading {
-      float: right;
-      margin-right: 1em;
+      position: fixed;
+      top: 5.25em;
+      right: 2em;
+      
+      border: 0.1em solid silver;
+      border-color: rgba(128, 128, 128, 0.25);
+      border-radius: 0.5em;
+      background-color: white;
+      background-color: rgba(255, 255, 255, 0.85);
+      display: flex;
     }
+    
+      #main-loading img {
+        padding: 0.6em;
+      }
     
     .hit .title a {
       margin-left: 0.5em;
@@ -1700,13 +1716,12 @@
     
     // download all data
     function downloadAllData(amazon, rm) {
-      var visible = $('#main-list-table .hitid a:visible');
+      var visible = $('#main-list-table .hitid:visible .search-only.hitid');
       
       if(visible.length == 0) {
         showMessage('Error', 'There are no visible HITs.', 'all delete none');
         return;
       }
-      
       var source = [];
       cacheNextHit(source, visible, amazon, rm);
     }
@@ -1714,11 +1729,11 @@
     // cache all hits
     function cacheNextHit(source, visible, amazon, rm) {
       $.each(__session['hits'], function(index, hit) {
-        if(hit.HITId == visible[source.length].title) {
+        if(hit.HITId == $(visible[source.length]).text()) {
           __session['current-hit'] = hit;
         }
-      })
-      updateAssignments(visible[source.length].title);
+      });
+      updateAssignments($(visible[source.length]).text());
       addToCache(source, visible, amazon, rm);
     }
     
@@ -1752,7 +1767,7 @@
                 buttons: {
                   "Delete HITs": function() {
                     $.each(visible, function(index, hit){
-                      deleteHIT(hit.title, (index < (visible.length - 1) ));
+                      deleteHIT($(hit).text(), (index < (visible.length - 1) ));
                     });
                     $(this).dialog('close');
                   },
@@ -1940,9 +1955,9 @@
               )
               // hit id
               .append( $('<td>').addClass('hitid')
-                .append($('<span>').addClass('search-only').text(hit.HITId))
-                .append($('<span>').addClass('search-only').text(hit.HITTypeId))
-                .append($('<span>').addClass('search-only').text(hit.HITGroupId))
+                .append($('<span>').addClass('search-only').addClass('hitid').text(hit.HITId))
+                .append($('<span>').addClass('search-only').addClass('hittypeid').text(hit.HITTypeId))
+                .append($('<span>').addClass('search-only').addClass('hitgroupid').text(hit.HITGroupId))
                 .append(
                   $('<a>').addClass('clickable')
                     .click( function(event) { manageHIT(event, hit); } )

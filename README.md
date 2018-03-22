@@ -198,6 +198,11 @@ The parameters specified in *(Preview)* links include the additional parameter `
 
 ## Change Log
 
+### 2018-03-22
+* Fixed overview level actions regression caused by introducing tool tips.
+* Moved activity indicator to float.
+* Fixed minor graphical glitch.
+
 ### 2018-03-21
 * Added `HitId`, `HitTypeID`, `HitGroupId`, and `AssignmentId` hover-over tool tips.
 * Minor documentation changes.
