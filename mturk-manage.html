@@ -2655,8 +2655,8 @@
                             $('<a>').text( '(Preview)' )
                               .click(function(event) { previewHIT(event, hit); })
                               .prop('target', '_blank')
-                              .prop('href', 'https://worker' +
-                                  (($('#login-aws-endpoint').val().indexOf('sandbox') > -1) ? 'sandbox' : '') +
+                              .prop('href', 'https://' +
+                                  (($('#login-aws-endpoint').val().indexOf('sandbox') > -1) ? 'workersandbox' : 'www') +
                                   '.mturkcontent.com/dynamic/hit?' +
                                   'assignmentId=ASSIGNMENT_ID_NOT_AVAILABLE&hitId=' +
                                   hit.HITId + '&source=manage-hits-console' ) :
