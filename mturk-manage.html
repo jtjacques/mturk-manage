@@ -7,17 +7,17 @@
   <title>Manage HITs</title>
   <meta name="description" content="Browser-based MTurk management console">
   <meta name="author" content="jtjacques@gmail.com">
-  
+
   <!-- AWS SDK, Amazon.com, Inc.: https://github.com/aws/aws-sdk-js -->
   <!--
     jsDelivr: https://www.jsdelivr.com/package/npm/aws-sdk?path=dist
     Using alternative CDN source supporting CORS to allow SRI check.
     Integrity hash generated from the official source as follows:
-    curl https://sdk.amazonaws.com/js/aws-sdk-2.212.1.min.js | openssl dgst -sha512 -binary | openssl base64 -A
+    curl https://sdk.amazonaws.com/js/aws-sdk-2.223.1.min.js | openssl dgst -sha512 -binary | openssl base64 -A
   -->
   <script
-    src="https://cdn.jsdelivr.net/npm/aws-sdk@2.212.1/dist/aws-sdk.min.js"
-    integrity="sha512-f3Bnz9Kfecv6WSnvmJn7CI8PsUXRE+5E7KeXFOu+mAio9q4BxAYqV+JqEDowr1gcJjr40XF8Vmn1KODVmSSBoQ=="
+    src="https://cdn.jsdelivr.net/npm/aws-sdk@2.223.1/dist/aws-sdk.min.js"
+    integrity="sha512-fntzcQUlP5fSwOGakPUapNOF2lOy9zclGqnN8Th42o4AlDHQo9ogeE/D4wDCi0u2ywSEJrIAzql6S8LEupn4xQ=="
     crossorigin="anonymous"></script>
 
   <!-- jQuery, JS Foundation: https://code.jquery.com -->
@@ -35,9 +35,9 @@
     href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"
     integrity="sha512-/Q1sBqvNZheW2yvAccKiu/xc/o2AtDS2jNBozDEqA/8Mk/IcH853wrwDSGqAdl7jFyOWOcefLtwDd3kYo276Hw=="
     crossorigin="anonymous">
-  
+
   <!-- AlaSQL, Andrey Gershun: https://github.com/agershun/alasql -->
-  <!-- 
+  <!--
     Note: http://www.jsdelivr.com/#!alasql is the preferred source
   -->
   <script
@@ -45,32 +45,33 @@
     integrity="sha512-wqn/K+yM6of5EGolrggvJeDH/VO/LSj5Tm55osVBMGrRxEhZ/cp7DqhHdbh+IEx6qNTm7vLKO0Bc8SphAjCINA=="
     crossorigin="anonymous"></script>
   <script>
+    // simple conversion function for csv export
     function exportData(file, rows) {
         alasql('SELECT * INTO CSV("' + file + '", {separator:",", headers:false}) FROM ?', [rows]);
     }
   </script>
-  
+
   <style>
     * {
       font-family: Helvetica, Arial, sans-serif;
     }
-    
+
     html {
       height: 100%;
     }
-    
+
     body {
       display: flex;
       flex-direction: column;
       height: 100vh;
       margin: 0;
     }
-    
+
     #login, #content {
       flex: 1 0 auto;
       margin: 0.75em;
     }
-    
+
     #content {
       min-height: 100%;
       margin-bottom: 7.5em;
@@ -86,21 +87,22 @@
         border: 1px solid black;
         padding: 0.25em 0.75em;
     }
-    
+
       table .search-only {
-        display: inline-block;
+        float: left;
         width: 0;
+        height: 0;
         overflow: hidden;
         padding: 0 !important;
         margin: 0 !important;
       }
-    
+
       table .hitid a, table .assignmentid > span {
         /* make hover events work slightly to the right */
         padding-right: 2em;
         margin-right: -2em;
       }
-    
+
       table a .hover-only, table .assignmentid span .hover-only {
         position: absolute;
         margin-left: 5em;
@@ -111,37 +113,37 @@
         border: 0.1em solid silver;
         font-size: 90%;
         cursor: default;
-        
+
         display: none;
       }
-    
+
       table .assignmentid > span .hover-only {
         margin-top: -1.9em;
         margin-left: -1.5em;
         font-size: 100%;
       }
-    
+
       table a:hover .hover-only, table .assignmentid span:hover .hover-only {
         display: block;
       }
-    
+
         table a .hover-only span, table .assignmentid span .hover-only span {
           display: block;
           margin: 0.75em 1em;
         }
-    
+
           table a .hover-only span:before {
             padding-right: 0.25em;
           }
-    
+
           table a .hover-only span.hover-hit-id:before {
             content: 'HIT ID:';
           }
-    
+
           table a .hover-only span.hover-group-id:before {
             content: 'Group ID:';
           }
-    
+
           table a .hover-only span.hover-type-id:before {
             content: 'Type ID:';
           }
@@ -149,53 +151,58 @@
       td.checkbox, td.reject {
         text-align: center;
       }
-      
+
         td.reject a {
           margin-left: 0;
         }
-    
+
     table div {
       margin: 0.23em 0;
     }
-      
+
     tr.ended {
       background-color: silver;
     }
-    
+
     tr.ended.waiting {
       background-color: whitesmoke;
     }
-    
+
     tr.assignment.rejected .reject a,
     tr.assignment.approved .reject a,
     tr.assignment.approved .checkbox input {
       display: none;
     }
-    
+
     tr.assignment.approved {
       background-color: whitesmoke;
     }
-    
+
     tr.assignment.rejected{
       background-color: mistyrose;
     }
-    
+
+    tr.assignment .time .future {
+      font-style: italic;
+      opacity: 0.75;
+    }
+
     a {
       color: blue;
     }
-    
+
     h2 {
       margin-top: 1.5em;
     }
-    
+
     h1 a, .hit .hitid a {
       color: inherit;
     }
-    
+
       h1 a.clickable, .hit .hitid a.clickable {
         color: blue;
       }
-    
+
     noscript, .warn {
       display: block;
       border: 0.2em dashed black;
@@ -205,7 +212,7 @@
       border-color: firebrick;
       color: darkred;
     }
-    
+
     .clickable {
       text-decoration: underline;
       cursor: pointer;
@@ -214,7 +221,11 @@
       .clickable.ui-button {
         line-height: 2em;
       }
-    
+
+      #worker-actions-menu .clickable.ui-button {
+        line-height: 1.75em;
+      }
+
     #header {
       background-color: firebrick;
       font-weight: bold;
@@ -222,34 +233,34 @@
       padding: 0.5em 1em;
       box-sizing: border-box;
     }
-    
+
     #header-aws {
       line-height: 2em;
     }
-      
+
       #header a {
         color: white;
       }
-    
+
       #header.sandbox {
         background-color: goldenrod;
       }
-      
+
       #header-aws {
         width: 100%;
       }
-      
+
         #header-aws span.clickable {
           float: right;
           text-decoration: none;
           line-height: 1em;
         }
-    
+
       #header-aws-balance {
         font-weight: normal;
         margin-left: 1em;
       }
-    
+
     #footer {
       opacity: 0.60;
       font-size: 80%;
@@ -259,12 +270,12 @@
       box-sizing: border-box;
       display: block !important;
     }
-    
+
     #main-loading {
       position: fixed;
       top: 5.25em;
       right: 2em;
-      
+
       border: 0.1em solid silver;
       border-color: rgba(128, 128, 128, 0.25);
       border-radius: 0.5em;
@@ -272,37 +283,42 @@
       background-color: rgba(255, 255, 255, 0.85);
       display: flex;
     }
-    
+
       #main-loading img {
         padding: 0.6em;
       }
-    
+
     .hit .title a {
       margin-left: 0.5em;
       font-size: 80%;
       vertical-align: text-top;
     }
-    
+
+    .hit .title a.not-avail {
+      color: silver;
+      text-decoration: none;
+    }
+
     .hit .keywords {
       font-size: 80%;
     }
-    
+
     .hit .status .pending span span:before {
       content: ' (+';
     }
     .hit .status .pending span span:after {
       content: ')';
     }
-    
+
     .actions {
       margin: 1em 0;
     }
-    
+
       .actions a {
         padding: 0 0.75em;
         margin-left: 1.5em;
       }
-    
+
         .actions a.active, .actions a.adjunct {
           margin-left: 0;
           margin-left: 0;
@@ -315,7 +331,7 @@
     td.workerid {
       position: relative;
     }
-    
+
       td.workerid .worker-actions {
         opacity: 0.33;
       }
@@ -327,28 +343,28 @@
       .workerid .workerid {
         padding: 1.55em 0;
       }
-    
+
     .worker-actions {
       margin-left: -0.15em;
       font-size: 75%;
       position: absolute;
       top: 50%;
     }
-      
+
       .worker-actions a {
         margin: 0.75em 1em 0 0;
       }
-    
+
       .worker-actions a:last-child {
         margin-right: 0;
       }
-      
-    
+
+
     #main-list-limit-summary {
       float: right;
       margin: 0.5em 0.25em 0 0;
     }
-    
+
     #main-list-search {
       font-family: inherit;
       font-size: inherit;
@@ -360,19 +376,33 @@
     :-moz-placeholder { font-style: italic; }
     ::-moz-placeholder { font-style: italic; }
     :-ms-input-placeholder { font-style: italic; }
-    
+
+    #main-list-refresh {
+      text-decoration: none;
+    }
+
     #main-list-refresh svg {
       width: 1.15em;
       height: 1.15em;
       margin-bottom: -0.2em;
     }
-    
+
     #main-manage-refresh svg {
       width: 1em;
       height: 1em;
       margin-bottom: -0.05em;
     }
-    
+
+    #worker-actions-menu ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    #worker-actions-menu li span {
+      display: block;
+      margin: 1em 0 2em 0;
+    }
+
     #login form {
       display: block;
       width: 50vw;
@@ -382,11 +412,11 @@
       box-sizing: border-box;
       font-size: 120%;
     }
-    
+
       #login form * {
         display: block;
       }
-      
+
       #login form input, #login form select {
         margin: 0 0 1em 0;
         width: 100%;
@@ -395,14 +425,14 @@
         border: 0.05em solid silver;
         padding: 0.25em 0.5em;
       }
-      
+
       #login form button {
         float: right;
         font-size: inherit;
         padding: 0.5em 0.75em;
         clear: both;
       }
-      
+
       #login form:after {
         content: '';
         display: block;
@@ -413,7 +443,11 @@
       padding-top: 1em;
       margin-left: 2%;
     }
-    
+
+    .ui-dialog div {
+      clear: both;
+    }
+
     .ui-dialog label {
       display: block;
       float: left;
@@ -424,11 +458,11 @@
 
       .ui-dialog label:after {
         content: ":";
-        display: inline-block;
+        /*display: inline-block;*/
         float: right;
         margin-top: -0.1em;
       }
-    
+
     .ui-dialog input, .ui-dialog textarea, .ui-dialog select {
       float: left;
       width: 65%;
@@ -436,33 +470,36 @@
       margin-top: -0.35em;
       padding: 0.25em;
     }
-    
+
     .ui-dialog select {
       height: 1.9em;
+    }
+
+    .ui-dialog .half select {
       margin-left: 1em;
     }
-    
+
     .ui-dialog textarea {
       height: 10em;
     }
-    
+
     .ui-dialog .half input, .ui-dialog .half select {
       width: 30%;
     }
-    
+
     .ui-dialog .wide label {
       width: 50%;
     }
-    
+
     .ui-dialog iframe {
       border: 0.15em solid silver;
     }
-    
+
     .ui-dialog-content div {
       margin-top: 0.25em;
       margin-bottom: 0.75em;
     }
-    
+
     .message-content {
       display: block;
       width: 100%;
@@ -473,51 +510,67 @@
       padding: 0.25em 0.5em;
       box-sizing: border-box;
     }
-    
+
     #hit-preview {
       overflow: hidden;
     }
-  
+
     #bonus-reference {
       font-style: italic;
       color: gray;
     }
-    
+
     #hit-preview iframe {
       width: 100%;
       height: 100%;
     }
 
+    #pay-result-url {
+      color: blue;
+    }
+
   </style>
-  
+
   <script>
-  
+
     // global variables
     var __session = [];
-    
+
     // how often to refresh cached data from api, in ms
     __session['refresh-freq'] = 5 * 60 * 1000;
-    
+
+    // base rate limit delay, in ms
+    __session['rate-limit-delay'] = 50;
+
     // entry point
     $(function() {
+      preFlight();
       attachEvents();
       updateMode();
     });
-    
+
+    // preflight function
+    function preFlight() {
+      try {
+        $('#login-time-zone').text( 'Local (' +
+            Intl.DateTimeFormat().resolvedOptions().timeZone + ')' );
+      } catch (e) { }
+    }
+
     // attach events to various ui elements
     function attachEvents() {
-      
+
       // show login on change
       $('#header-aws').click(function(event) {
         updateMode('login');
       });
-      
+
       // login button
       $('#login-button').click(function(event) {
         event.preventDefault();
         setLogin(event);
       });
-      
+
       // search box
       $('#main-list-search').change(function(event) {
         event.preventDefault();
@@ -527,29 +580,49 @@
       $('#main-list-search').keyup(function(event) {
         $('#main-list-search').change();
       });
-      
+
       // all link
       $('#main-list-limit-all').click(function(event) {
-        $('#main-list-limit a').removeClass('clickable').addClass('clickable');
-        $(this).removeClass('clickable');
+        // $('#main-list-limit a').removeClass('clickable').addClass('clickable'); // legacy
         $('#main-list-search').val('');
         updateMode('list'); // switch mode to trigger refresh check
-        listHideExceptSearch(null);
+        // listHideExceptSearch(null); // legacy
+        $('#main-list-search').change();
+        $(this).removeClass('clickable');
       });
-      
+
       // active link
       $('#main-list-limit-all-active').click(function(event) {
-        $('#main-list-limit a').removeClass('clickable').addClass('clickable');
+        // $('#main-list-limit a').removeClass('clickable').addClass('clickable'); // legacy
+        $('#main-list-search').val('status/active ');
+        // listHideExceptSearch(null, true); // legacy
+        $('#main-list-search').change();
         $(this).removeClass('clickable');
-        $('#main-list-search').val('');
-        listHideExceptSearch(null, true);
       });
-      
+
+      // waiting link
+      $('#main-list-limit-all-waiting').click(function(event) {
+        // $('#main-list-limit a').removeClass('clickable').addClass('clickable'); // legacy
+        $('#main-list-search').val('status/waiting ');
+        // listHideExceptSearch(null, true, true); // legacy
+        $('#main-list-search').change();
+        $(this).removeClass('clickable');
+      });
+
+      // ended link
+      $('#main-list-limit-all-ended').click(function(event) {
+        // $('#main-list-limit a').removeClass('clickable').addClass('clickable'); // legacy
+        $('#main-list-search').val('status/ended ');
+        // listHideExceptSearch(null, false, true); // legacy
+        $('#main-list-search').change();
+        $(this).removeClass('clickable');
+      });
+
       // manage hits title (proxy for all link)
       $('#main-list-manage').click(function(event) {
         $('#main-list-limit-all').click();
       });
-      
+
       // refresh icons
       $('#main-list-refresh, #main-manage-refresh').click(function(event) {
         // clear caches
@@ -557,42 +630,135 @@
         __session['hits'] = [];
         __session['assignments-age'] = 0;
         __session['assignments'] = [];
-        
+
         updateMode('refresh');
       });
-      
+
+      // worker actions
+      $('#main-list-utils').click(function(event) {
+
+        $('#worker-actions-menu').dialog({
+          width: 450,
+          minWidth: 450,
+          modal: true,
+          open: function(event, ui) { },
+          buttons: {
+            Close: function() {
+              $(this).dialog('close');
+            }
+          }
+        });
+
+      });
+
+      // worker actions - message
+      $('#worker-action-message').click(function(event) {
+        $(this).closest('.ui-dialog-content').dialog('close');
+        messageWorkers(null, '');
+      });
+
+      // worker actions - pay
+      $('#worker-action-pay').click(function(event) {
+        $(this).closest('.ui-dialog-content').dialog('close');
+        $('#worker-actions-pay-create').dialog({
+          width: 450,
+          minWidth: 450,
+          modal: true,
+          open: function(event, ui) {
+            $('#pay-create-workerid').val('');
+            $('#pay-create-value').val('0.00');
+            $('#pay-create-auto').val(300);
+          },
+          buttons: {
+            "Create Task": function() {
+
+              $(this).dialog('close');
+
+              var workerid = $('#pay-create-workerid').val();
+              if(!workerid.length) {
+                showMessage('Worker ID Required', 'A worker ID is required for this action.')
+                return;
+              }
+
+              var pay = parseInt((parseFloat($('#pay-create-value').val()) * 100))/100;
+              if(isNaN(pay) || pay <= 0) {
+                pay = 0;
+                showMessage('Task Value Required', 'The task value must be set and be greater than zero.', 'pay value error  (' + $('#pay-create-value').val() + ')');
+                return;
+              }
+
+              var auto = parseFloat($('#pay-create-auto').val());
+
+              $('#worker-actions-pay-confirm').dialog({
+                width: 450,
+                minWidth: 450,
+                modal: true,
+                open: function(event, ui) {
+                  $('#pay-confirm-workerid').text(workerid);
+                  $('#pay-confirm-value').text(currencyPad(pay));
+                  $('#pay-confirm-auto').text($('#pay-create-auto option:selected').text());
+                  $(this).closest('.ui-dialog').find('.ui-dialog-buttonpane').find('button:last').focus();
+                },
+                buttons: {
+                  "Create Payment Task": function() {
+                    doreq(reqCreatePaymentTask, {WorkerId: workerid, Reward: pay, AutoApprovalDelayInSeconds: auto});
+                    $(this).dialog('close');
+                    return;
+                  },
+                  Cancel: function() {
+                    console.log('pay confirm cancel');
+                    $(this).dialog('close');
+                  }
+                }
+              });
+
+            },
+            Cancel: function() {
+              console.log('pay create cancel');
+              $(this).dialog('close');
+            }
+          }
+        });
+
+      });
+
+      // worker actions - visit mturk
+      $('#worker-action-mturk').click(function(event) {
+        $(this).closest('.ui-dialog-content').dialog('close');
+        window.open('https://requester' + (($('#login-aws-endpoint').val().indexOf('sandbox') > -1) ? 'sandbox' : '') + '.mturk.com/workers' , '_blank');
+      });
+
       // download link
       $('#main-manage-download').click(function(event) {
         downloadData();
       });
-      
+
       // all download link
       $('#main-list-download').click(function(event) {
         downloadAllData();
       });
-      
+
       // download amazon format link
       $('#main-manage-download-amazon').click(function(event) {
         downloadData(true);
       });
-      
+
       // all download amazon format link
       $('#main-list-download-amazon').click(function(event) {
         downloadAllData(true);
       });
-      
+
       // expire hit
       $('#main-manage-hit-expire').click(function(event) {
-        
+
         $('#expire-hit').dialog({
-          height: 225,
           width: 450,
           minWidth: 450,
           modal: true,
           open: function(event, ui) {
             $('#expire-hit-title').text(__session['current-hit'].Title);
             $('#expire-hit-assignments').text(__session['current-hit'].NumberOfAssignmentsAvailable);
-            $('#expire-hit-current').text(formatDate(__session['current-hit'].Expiration));
+            $('#expire-hit-current').text(formatDate(__session['current-hit'].Expiration, __session['time-format']));
           },
           buttons: {
             "Expire HIT": function() {
@@ -605,18 +771,17 @@
             }
           }
         });
-        
+
       });
-      
+
       // delete hit
       $('#main-manage-hit-delete').click(function(event){
-        
+
         if(__session['current-hit'].Submitted > 0) {
           showMessage('Error', 'There are unreviewed submissions for this HIT.', 'delete refused');
           $('#main-manage-assign-submitted').click();
         } else {
           $('#delete-hit').dialog({
-            height: 225,
             width: 450,
             minwidth: 450,
             modal: true,
@@ -635,18 +800,18 @@
             }
           });
         }
-        
+
       });
-      
+
       // delete visible hits
       $('#main-list-hit-delete').click(function(event){
         var visible = $('#main-list-table .hitid a:visible');
-        
+
         if(visible.length == 0) {
           showMessage('Error', 'There are no visible HITs.', 'all delete none');
           return;
         }
-        
+
         var errors = 0; var active = 0;
         $.each(visible, function(index, vhit){
           $.each(__session['hits'], function(index, hit) {
@@ -660,14 +825,13 @@
             }
           });
         });
-        
+
         if(errors > 0) {
           showMessage('Error', 'There are unreviewed submissions for ' + errors + ' visible HIT' + (errors > 1 ? 's' : '') + '.', 'all delete refused submission');
         } else if(active > 0) {
           showMessage('Error', 'There ' + (active > 1 ? 'are ' : 'is ') + active + ' active visible HIT' + (active > 1 ? 's' : '') + '.', 'all delete refused active');
         } else {
           $('#all-delete-hit').dialog({
-            height: 245,
             width: 450,
             minwidth: 450,
             modal: true,
@@ -686,14 +850,13 @@
             }
           });
         }
-        
+
       });
-    
+
       // extend hit
       $('#main-manage-hit-extend').click(function(event) {
 
         $('#extend-hit').dialog({
-          height: 175,
           width: 450,
           minWidth: 450,
           modal: true,
@@ -712,7 +875,7 @@
             $('#extend-multiply').val('hours');
           }
         });
-        
+
       });
 
       // increase hit
@@ -722,9 +885,8 @@
           showMessage('Error', 'Tasks with less than 10 assignments may not be extended to exceed 9.<br><br>' +
               'No additional assignments can be added for this HIT.', 'increase not valid (change of price band)');
         } else {
-          
+
           $('#increase-hit').dialog({
-            height: 175,
             width: 450,
             minWidth: 450,
             modal: true,
@@ -742,43 +904,43 @@
               $('#increase-value').val(0);
             }
           });
-          
+
         }
-        
+
       });
-      
+
       // list submitted only
       $('#main-manage-assign-submitted').click(function(event) {
         __session['assignment-mode'] = 'submitted';
         assignmentHideExcept('submitted');
         updateMode('manage');
       });
-      
+
       // list approved only
       $('#main-manage-assign-approved').click(function(event) {
         __session['assignment-mode'] = 'approved';
         assignmentHideExcept('approved');
       });
-      
+
       // list rejected only
       $('#main-manage-assign-rejected').click(function(event) {
         __session['assignment-mode'] = 'rejected';
         assignmentHideExcept('rejected');
       });
-      
+
       // list all
       $('#main-manage-assign-all').click(function(event) {
         __session['assignment-mode'] = 'all';
         assignmentHideExcept('all');
         updateMode('manage');
       });
-    
+
       // check all
       $('#main-assignment-check-all').change(function(event) {
         $('#main-assignment-table .assignment input[type=checkbox]:visible').prop('checked',
             $('#main-assignment-check-all').prop('checked'));
       });
-      
+
       // approve selected
       $('#main-assingment-approve-checked').click(function(event) {
         var visible = $("#main-assignment-table .assignment .checkbox input[type=checkbox]:checked:visible"); // save visible
@@ -797,13 +959,13 @@
                 $('#main-loading').hide();
               }
             });
-            
+
           });
         } else {
           showMessage('Error', 'No assignments selected.', 'nothing to approve');
         }
       });
-      
+
       // message displayed
       $('#main-assingment-message-displayed').click(function(event) {
         var workerids = "";
@@ -816,9 +978,9 @@
         } else {
           showMessage('Error', 'No Worker IDs displayed.', 'nobody to message');
         }
-        
+
       });
-      
+
       // message all
       $('#main-assingment-message-all').click(function(event) {
         var workerids = "";
@@ -831,19 +993,19 @@
         } else {
           showMessage('Error', 'No workers for this HIT.', 'nobody to message');
         }
-        
+
       });
-      
-      
+
+
       // modal form submit
       $('#modal-elements form').submit(function(event) { event.preventDefault();} );
-      
+
       // ui enhancements
-      
-    
+
+
     }
-    
-    
+
+
     // checkbox helper
     function checkboxHelper(event) {
       if($(event)[0].target.tagName.toLowerCase() != 'input') {
@@ -852,12 +1014,454 @@
             !$($(event)[0].target).find('input[type=checkbox]').prop('checked'));
       }
     }
-    
+
+
+
+    // callback helpers
+    // - use for functions prefixed with "req"
+
+    // create a callback req
+    function req(state, callback, func, params) {
+      var state = {
+        state: state,
+        callback: callback,
+        params: params
+      };
+      func(state);
+    }
+
+    // get return data
+    function isret(state) {
+      if('__return' in (state || {})) {
+        data = state.__return;
+        delete state.__return;
+        return {return: data};
+      }
+      return false;
+    }
+
+    // return data
+    function ret(state, data) {
+      var rstate = ('state' in state) ? (state.state || {}) : {};
+      rstate.__return = data;
+      state.callback(rstate);
+      return true;
+    }
+
+
+    // callback examples
+
+    // doreq
+    function doreq(f, params) {
+      req({}, function() {return;}, f, params);
+    }
+
+    // logreq
+    function logreq(f, params) {
+      req({}, function(d) { console.log( (isret(d)).return ); }, f, params);
+    }
+
+
+
+    // create payment task
+    // params: WorkerId, Reward, [AutoApprovalDelayInSeconds 300], [LifetimeInSeconds 2592000], [ShowDialog: true]
+    function reqCreatePaymentTask(data) {
+      // set default AutoApprovalDelayInSeconds to 300, 5 mins
+      data.params.AutoApprovalDelayInSeconds =
+          $.isNumeric(parseInt(data.params.AutoApprovalDelayInSeconds)) ?
+          parseInt(data.params.AutoApprovalDelayInSeconds) : 300;
+      // set default LifetimeInSeconds to 2592000, 30 days
+      data.params.LifetimeInSeconds =
+          $.isNumeric(parseInt(data.params.LifetimeInSeconds)) ?
+          parseInt(data.params.LifetimeInSeconds) : 2592000;
+      // set default show dialog to true
+      data.params.ShowDialog = (! ('ShowDialog' in data.params)) ?
+          true : (!!data.params.ShowDialog);
+
+      // create user qualification text
+      var qualText = 'Worker ID is ' + data.params.WorkerId;
+      var titleText = 'One-off payment task for Worker ID ' + data.params.WorkerId;
+
+      if(! ('QualificationTypeId' in data.params) ) {
+        if(d = isret(data)) {
+          if(false === d.return) {
+            ret(data, d.return);
+            return;
+          }
+          data.params.QualificationTypeId = d.return.QualificationTypeId;
+        } else {
+          var params = {
+            WorkerId: data.params.WorkerId,
+            Name: qualText,
+            Description: qualText
+          }
+          req(data, reqCreatePaymentTask, reqCreateAssignWorkerQualification, params);
+          return;
+        }
+      }
+
+      if( d = isret(data) ) {
+        if(data.params.ShowDialog) {
+          $('#worker-actions-pay-result').dialog({
+            width: 700,
+            minWidth: 700,
+            modal: true,
+            open: function(event, ui) {
+              var url = 'https://worker' +
+                  (($('#login-aws-endpoint').val().indexOf('sandbox') > -1) ? 'sandbox' : '') +
+                  '.mturk.com/projects/' + d.return.HIT.HITGroupId + '/tasks'
+              $('#pay-result-url').prop('href', url).text(url);
+              $('#pay-result-workerid').text(data.params.WorkerId);
+              $('#pay-result-value').text(currencyPad(d.return.HIT.Reward));
+              $('#pay-result-auto').text($('#pay-create-auto option:selected').text().toLowerCase());
+            },
+            buttons: {
+              Close: function() {
+                // refresh display
+                __session['hits-age'] = 0;
+                __session['assignments-age'] = 0;
+                $('#main-list-search').val(d.return.HIT.HITId);
+                updateMode('refresh');
+                $(this).dialog('close');
+              }
+            }
+          });
+        }
+        ret(data, d.return);
+        return;
+      } else {
+        // extract html template from #base64-payment-html
+        var html = atob($('#base64-payment-html').text());
+        html = html.replace(/\${WorkerID}/g, data.params.WorkerId);
+
+        // setup hit paramaters
+        var params = {
+            Title: titleText,
+            Description: titleText + '.',
+            Keywords: data.params.WorkerId + ', ' + btoa(new Date().toISOString()),
+            Reward: data.params.Reward,
+            MaxAssignments: 1,
+            AssignmentDurationInSeconds: 60, // 1 min
+            LifetimeInSeconds: 2592000, // 30 days,
+            Question: generateHTMLQuestion(html),
+            QualificationRequirements: [
+                generateQualificationRequirement(
+                    data.params.QualificationTypeId,
+                    'DiscoverPreviewAndAccept',
+                    'Exists'
+                ) ],
+            AutoApprovalDelayInSeconds: data.params.AutoApprovalDelayInSeconds
+        };
+        req(data, reqCreatePaymentTask, reqCreateTask, params);
+        return;
+      }
+    }
+
+    // search for qualifications
+    // params: Query, [MustBeOwnedByCaller false]
+    function reqGetQualifications(data) {
+      // set default for MustBeOwnedByCaller to false
+      data.params.MustBeOwnedByCaller = !!(data.params.MustBeOwnedByCaller) || false;
+
+      var params = {
+          MustBeRequestable: false,
+          MustBeOwnedByCaller: data.params.MustBeOwnedByCaller,
+          Query: data.params.Query
+      };
+      var datain = data;
+      __session['mturk'].listQualificationTypes(params, function(err, data) {
+        if (err) {
+          showMessage('API Error', err.message);
+        } else {
+          // return data, using callback
+          ret(datain, data);
+          return;
+        }
+      });
+
+    }
+
+    // unique keyword generate
+    function generateQualificationKeyword(name) {
+      return 'mturk-manage-qualification/' + btoa(name);
+    }
+
+
+    // create qualifications
+    // params: Name, Description, [Keywords ]
+    function reqCreateQualification(data) {
+
+      // get matching qualification, using callback
+      if(! ('quals' in data) ) {
+        // is callback, record data
+        if(d = isret(data)) {
+          data.quals = d.return;
+        } else {
+          // not callback, do callback
+          var params = {
+            Query: generateQualificationKeyword(data.params.Name),
+            MustBeOwnedByCaller: true
+          };
+          req(data, reqCreateQualification, reqGetQualifications, params);
+          return;
+        }
+      }
+
+      // check length of matching qualifications
+      if(data.quals.QualificationTypes.length) {
+        // multiple matching qualifications ???
+        if(data.quals.QualificationTypes.length > 1) {
+          showMessage('Error', 'Multiple qualifications found with matching search.', data.quals);
+          ret(data, false);
+          return;
+        }
+        // return existing qualification id, using callback
+        ret(data, data.quals.QualificationTypes[0].QualificationTypeId);
+        return;
+      } else {
+        var keywords = data.params.Keywords ?
+            data.params.Keywords + ',' + generateQualificationKeyword(data.params.Name) :
+            generateQualificationKeyword(data.params.Name);
+        var params = {
+            Description: data.params.Description,
+            Name: data.params.Name,
+            QualificationTypeStatus: 'Active',
+            Keywords: keywords
+        };
+        var datain = data;
+        __session['mturk'].createQualificationType(params, function(err, data) {
+          if (err) {
+            showMessage('API Error', err.message);
+          } else {
+            // return created QualificationTypeId, using callback
+            ret(datain, data.QualificationType.QualificationTypeId);
+            return;
+          }
+        });
+      }
+
+    }
+
+    // delete qualification
+    // params: QualificationTypeId
+    function reqDeleteQualification(data) {
+      var params = {
+          QualificationTypeId: data.params.QualificationTypeId
+      };
+      var datain = data;
+      __session['mturk'].deleteQualificationType(params, function(err, data) {
+        if (err) {
+          showMessage('API Error', err.message);
+        } else {
+          // return, using callback
+          ret(datain, true);
+          return;
+        }
+      });
+    }
+
+    // check qualifications
+    // params: WorkerId, QualificationTypeId
+    function reqCheckWorkerQualification(data) {
+      var params = {
+          QualificationTypeId: data.params.QualificationTypeId,
+          WorkerId: data.params.WorkerId
+      };
+      var datain = data;
+      __session['mturk'].getQualificationScore(params, function(err, data) {
+        if (err) {
+          // suppress this error
+          // - user does not have qualification
+          //showMessage('API Error', err.message);
+          ret(datain, false);
+          return;
+        } else {
+          ret(datain, data.Qualification);
+          return;
+        }
+      });
+    }
+
+    // assign qualification
+    // params: WorkerId, QualificationTypeId, [IntegerValue 1], [SendNotification false]
+    function reqAssignWorkerQualification(data) {
+      // default SendNotification to false
+      data.params.SendNotification = !!(data.params.SendNotification) || false;
+      // default IntegerValue to 1
+      data.params.IntegerValue =
+          $.isNumeric(parseInt(data.params.IntegerValue)) ?
+          parseInt(data.params.IntegerValue) : 1;
+
+      var params = {
+          WorkerId: data.params.WorkerId,
+          QualificationTypeId: data.params.QualificationTypeId,
+          IntegerValue: data.params.IntegerValue,
+          SendNotification: data.params.SendNotification
+      };
+      var datain = data;
+      __session['mturk'].associateQualificationWithWorker(params, function(err, data) {
+        if (err) {
+          showMessage('API Error', err.message, err);
+          ret(datain, false);
+          return;
+        } else {
+          ret(datain, datain.params.IntegerValue);
+          return;
+        }
+      });
+    }
+
+    // remove qualification
+    // params: WorkerId, QualificationTypeId, [Reason null]
+    function reqRemoveWorkerQualification(data) {
+      // default SendNotification to null
+      data.params.Reason = (data.params.Reason) || null;
+      var params = {
+          WorkerId: data.params.WorkerId,
+          QualificationTypeId: data.params.QualificationTypeId,
+          Reason: data.params.Reason
+      };
+      var datain = data;
+      __session['mturk'].disassociateQualificationFromWorker(params, function(err, data) {
+        if (err) {
+          showMessage('API Error', err.message, err);
+          ret(datain, false);
+          return;
+        } else {
+          ret(datain, true);
+          return;
+        }
+      });
+    }
+
+    // create and assign qualifications
+    // params: WorkerId, Name, Description, [Keywords ],  [IntegerValue 1], [SendNotification false]
+    function reqCreateAssignWorkerQualification(data) {
+      // get/create qualification type id
+      if(! ('QualificationTypeId' in data.params) ) {
+        if(d = isret(data)) {
+          data.params.QualificationTypeId = d.return;
+        } else {
+          var params = {
+            Name: data.params.Name,
+            Description: data.params.Description,
+            Keywords: data.params.Keywords
+          }
+          req(data, reqCreateAssignWorkerQualification, reqCreateQualification, params);
+          return;
+        }
+      }
+
+      // assign qualification
+      if(d = isret(data)) {
+        if(false === d.return) {
+          ret(data, d.return);
+          return;
+        }
+        ret(data, {
+                QualificationTypeId: data.params.QualificationTypeId,
+                IntegerValue: d.return,
+                WorkerId: data.params.WorkerId
+            });
+        return;
+      } else {
+        var params = {
+          WorkerId: data.params.WorkerId,
+          QualificationTypeId: data.params.QualificationTypeId,
+          IntegerValue: data.params.IntegerValue,
+          SendNotification: data.params.SendNotification
+        }
+        req(data, reqCreateAssignWorkerQualification, reqAssignWorkerQualification, params)
+        return;
+      }
+    }
+
+    // create external question xml
+    function generateExternalQuestion(url, height) {
+      height = parseInt(height) ? parseInt(height) : 950;
+      var schema = 'http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2006-07-14/ExternalQuestion.xsd';
+      var template =
+          '<ExternalQuestion xmlns="' + schema + '">' +
+          '  <ExternalURL>' + url + '</ExternalURL>' +
+          '  <FrameHeight>' + height + '</FrameHeight>' +
+          '</ExternalQuestion>';
+      return template;
+    }
+
+    // create html question xml
+    function generateHTMLQuestion(html, height) {
+      height = parseInt(height) ? parseInt(height) : 950;
+      // encode, non-encoded &amp; -- for amazon
+      html = html.replace(/&(?!\w+;|\#[0-9]+;|\#[xX][0-9a-fA-F]+;)/g, '&amp;');
+      var schema = 'http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2011-11-11/HTMLQuestion.xsd';
+      var template =
+          '<HTMLQuestion xmlns="' + schema  + '">' +
+          '  <HTMLContent><![CDATA[' +
+          html +
+          ']]>' +
+          '  </HTMLContent>' +
+          '  <FrameHeight>' + height  + '</FrameHeight>' +
+          '</HTMLQuestion>';
+      return template;
+    }
+
+    function generateQualificationRequirement(qualid, actionsguarded, comparator, values) {
+      var QualificationRequirement = {
+	           QualificationTypeId: qualid,
+	           Comparator: comparator,
+             ActionsGuarded: actionsguarded
+           }
+      if(values && values.length) {
+        if('undefined' != typeof(values[0].Country)) {
+          QualificationRequirement.LocaleValues = values;
+        } else {
+          QualificationRequirement.IntegerValues = values;
+        }
+      }
+      return QualificationRequirement;
+    }
+
+    // create task
+    // params: Title, Description, Keywords, Reward, MaxAssignments, AssignmentDurationInSeconds, LifetimeInSeconds, Question, [QualificationRequirements []], [AutoApprovalDelayInSeconds null]
+    function reqCreateTask(data) {
+      // default QualificationRequirements to []
+      data.params.QualificationRequirements = data.params.QualificationRequirements || [];
+      // default AutoApprovalDelayInSeconds to null (normally: 2592000 sec or 30 days)
+      data.params.AutoApprovalDelayInSeconds =
+          $.isNumeric(parseInt(data.params.AutoApprovalDelayInSeconds)) ?
+          parseInt(data.params.AutoApprovalDelayInSeconds) : null;
+      // create task
+      var params = {
+          Title: data.params.Title,
+          Description: data.params.Description,
+          Keywords: data.params.Keywords,
+          Reward: currencyPad(data.params.Reward),
+          MaxAssignments: data.params.MaxAssignments,
+          AssignmentDurationInSeconds: data.params.AssignmentDurationInSeconds,
+          LifetimeInSeconds: data.params.LifetimeInSeconds,
+          Question: data.params.Question,
+          QualificationRequirements: data.params.QualificationRequirements,
+          AutoApprovalDelayInSeconds: data.params.AutoApprovalDelayInSeconds
+      };
+      var datain = data;
+      __session['mturk'].createHIT(params, function(err, data) {
+        if (err) {
+          showMessage('API Error', err.message, err);
+          return;
+        } else {
+          // return data, using callback
+          ret(datain, data);
+          return;
+        }
+      });
+    }
+
+
+
     // reject assignment
     function rejectAssignment(event, assignment) {
-      
+
       $('#reject-assignment').dialog({
-        height: 400,
         width: 550,
         minWidth: 500,
         modal: true,
@@ -879,14 +1483,14 @@
           $('#reject-feedback').val('');
         }
       });
-      
+
     }
-    
+
     // reject assignment confirm
     function confirmRejectAssignement(assignment, feedback) {
       if(feedback != null && feedback !== '') {
         if(feedback.length <= 1024) {
-          
+
           $('#reject-confirm').dialog({
             minWidth: 500,
             modal: true,
@@ -920,8 +1524,8 @@
         }
       }
     }
-    
-    // reject assignemnt api call
+
+    // reject assignment api call
     function doRejectAssignment(assignment, feedback) {
       $('#main-loading').show();
       var params = {AssignmentId: assignment.AssignmentId, RequesterFeedback: feedback};
@@ -936,7 +1540,7 @@
         $('#main-loading').hide();
       });
     }
-    
+
     // extend hit confirm
     function confirmExtendHit(hit, value, multiply) {
       var expiration = hit.Expiration.getTime();
@@ -957,8 +1561,8 @@
           modal: true,
           width: 450,
           open: function(event, ui) {
-            $('#extend-confirm-current').text(current ? formatDate(current) : 'Expired');
-            $('#extend-confirm-new').text(formatDate(expiration));
+            $('#extend-confirm-current').text(current ? formatDate(current, __session['time-format']) : 'Expired');
+            $('#extend-confirm-new').text(formatDate(expiration, __session['time-format']));
           },
           buttons: {
             "Set Expration Time": function() {
@@ -979,12 +1583,12 @@
           showMessage('Error', 'Extension must be a greater than zero.', 'extend error (' + value + ')');
         }
       }
-      
+
     }
-    
+
     // increaseHitConfirm
     function confirmIncreaseHit(hitid, extend) {
-      
+
       extend = parseInt(extend);
 
       if(extend > 0) {
@@ -1014,7 +1618,7 @@
           });
 
         } else {
-          
+
           showMessage('Error', 'This increase would result in more than 9 assignments for this HIT.<br><br>' +
               'Tasks with less than 10 assignments may not be extended to exceed 9.<br><br>' +
               ('The maximum increase possible for this HIT is ' + (9 - current) + '.'),
@@ -1028,13 +1632,12 @@
         console.log('increase not valid (' + extend + ')');
       }
     }
-    
+
     // bonus worker
     function bonusWorker(event, assignment) {
       var reference = assignment.WorkerId.substr(assignment.WorkerId.length -6, 6) +
             '-' + assignment.AssignmentId.substr(assignment.AssignmentId.length -6, 6);
       $('#bonus-worker').dialog({
-        height: 500,
         width: 550,
         minWidth: 500,
         modal: true,
@@ -1060,7 +1663,7 @@
         }
       });
     }
-    
+
     // bonus worker confirm
     function confirmBonusWorker(assignment, reference, value, message) {
       pay = parseInt((parseFloat(value) * 100))/100;
@@ -1105,7 +1708,7 @@
         }
       }
     }
-    
+
     // bonus worker api call
     function doBonusWorker(assignment, reference, value, message) {
       $('#main-loading').show();
@@ -1127,11 +1730,13 @@
         $('#main-loading').hide();
       });
     }
-    
+
     // message worker
     function messageWorkers(event, workerids) {
+      if(!workerids) {
+        $('#message-worker label:first').attr('autofocus', 'autofocus');
+      }
       $('#message-worker').dialog({
-        height: 400,
         width: 550,
         minWidth: 500,
         modal: true,
@@ -1152,10 +1757,11 @@
           $('#message-workerids').val('');
           $('#message-subject').val('');
           $('#message-message').val('');
+          $('#message-worker label:first').removeAttr('autofocus');
         }
       });
     }
-    
+
     // message worker confirm
     function confirmMessageWorkers(workerids, subject, message) {
       workerids = workerids.replace(/\s/g, ',').split(',').filter(function(wid) {
@@ -1213,7 +1819,7 @@
         }
       }
     }
-    
+
     // message worker api call
     function doMessageWorkers(workerids, subject, message) {
       $('#main-loading').show();
@@ -1227,14 +1833,14 @@
         $('#main-loading').hide();
       });
     }
-    
+
     // preview hit
     function previewHIT(event, hit) {
       event.preventDefault();
       var url = $(event.target).prop('href');
       $( '#hit-preview' ).dialog({
-        height: (window.innerHeight - 300),
-        width: (window.innerWidth - 300),
+        height: (window.innerHeight - 100),
+        width: (window.innerWidth - 150),
         modal: true,
         title: (hit.Title + ' (' + hit.HITId + ')'),
         open: function(event, ui) {
@@ -1245,12 +1851,19 @@
         },
         buttons: {
           "Simulate Accept": function() {
-            var sim= 'SIM' + Date.now();
-            simurl = url.replace('ASSIGNMENT_ID_NOT_AVAILABLE', sim).replace('&source=manage-hits-console', '') +
-              '&workerId=' + sim + '&turkSubmitTo=https%3A%2F%2F' +
-              ( ($('#login-aws-endpoint').val().indexOf('sandbox') > -1) ? 'www' : 'workersandbox') + '.mturk.com' +
-              '&source=manage-hits-console';
-            $('#hit-preview iframe').prop('src', simurl);
+            var button = $(this).closest('.ui-dialog').find('.ui-dialog-buttonpane').find('button:first')
+            if('Simulate Accept' == button.text()) {
+              var sim = 'SIM' + Date.now();
+              var simurl = url.replace('ASSIGNMENT_ID_NOT_AVAILABLE', sim).replace('&source=manage-hits-console', '') +
+                '&workerId=' + sim + '&turkSubmitTo=https%3A%2F%2F' +
+                ( ($('#login-aws-endpoint').val().indexOf('sandbox') > -1) ? 'www' : 'workersandbox') + '.mturk.com' +
+                '&source=manage-hits-console';
+              $('#hit-preview iframe').prop('src', simurl);
+              button.text('Show Anonymous');
+            } else {
+              $('#hit-preview iframe').prop('src', url);
+              button.text('Simulate Accept');
+            }
           },
           "Open in New Window": function() {
             window.open($('#hit-preview iframe').prop('src'));
@@ -1262,7 +1875,7 @@
         }
       });
     }
-    
+
     function showMessage(title, message, err) {
       // italicise api errors if not already
       if (title.toLowerCase().indexOf('api') != -1) {
@@ -1289,7 +1902,7 @@
         console.log(err);
       }
     }
-    
+
     // set hit expiration date
     function setHITExpiration(hitid, date) {
       $('#main-loading').show();
@@ -1305,7 +1918,7 @@
         $('#main-loading').hide();
       });
     }
-    
+
     // add assignment to hit
     function addAssignmentToHIT(hitid, assignments) {
       $('#main-loading').show();
@@ -1320,15 +1933,24 @@
         $('#main-loading').hide();
       });
     }
-    
+
     // delete hit
     function deleteHIT(hitid, preventUpdate) {
       $('#main-loading').show();
       var params = {HITId: hitid};
       __session['mturk'].deleteHIT(params, function(err, data) {
         if (err) {
-          showMessage('API Error', err.message);
+          if(err.indexOf('Rate') > -1) {
+            __session['rate-limit-delay'] *= 2;
+            window.setTimeout(function() {
+              deleteHIT(hitid, preventUpdate);
+            }, __session['rate-limit-delay']);
+          } else {
+            showMessage('API Error', err.message);
+          }
         } else {
+          __session['rate-limit-delay'] = __session['rate-limit-delay'] > 50 ?
+              __session['rate-limit-delay'] / 2 : 50;
           if(!preventUpdate){
             __session['hits-age'] = 0;
             doList();
@@ -1337,7 +1959,7 @@
         $('#main-loading').hide();
       });
     }
-    
+
     // update hit action links
     function updateHITActions() {
       $('#main-manage-actions a').show();
@@ -1350,8 +1972,8 @@
         $('#main-manage-hit-delete').hide();
       }
     }
-    
-    // filter assignments 
+
+    // filter assignments
     function assignmentHideExcept(except) {
       $('#main-assignment-table .assignment').hide();
       $('#main-assignment-table .assignment' + (except == 'all' ? '' : '.' + except)).show();
@@ -1363,11 +1985,12 @@
       $('#main-manage-assign-' + except).removeClass('clickable');
       $('#main-assignment-check-all').prop('checked', false); // should we uncheck all?
     }
-    
+
     // filter hits
-    function listHideExceptSearch(search, active) {
+    function listHideExceptSearch(search, active, ended) {
       search = search ? search.toLowerCase() : '';
       active = active ? true : false;
+      ended = ended ? true : false;
       $('#main-list-table tr').hide();
       $('#main-list-table tr').filter(function(index) {
         var row = $(this).text().toLowerCase();
@@ -1389,13 +2012,23 @@
         });
         return show;
       }).show();
-      if(active) {
+      // legacy
+      /*
+      if(active && !ended) {
         $('#main-list-table tr.ended').filter(function(index) { return !$(this).hasClass('waiting'); } ).hide();
       }
+      if(ended && !active) {
+        $('#main-list-table tr.ended').filter(function(index) { return $(this).hasClass('waiting'); } ).hide();
+        $('#main-list-table tr.active').hide();
+      }
+      if(active && ended) {
+        $('#main-list-table tr').filter(function(index) { return !$(this).hasClass('waiting'); } ).hide();
+      }
+      */
       updateSummary();
       updateHITActions();
     }
-    
+
     // update summary data
     function updateSummary() {
       // update "none" display
@@ -1425,29 +2058,29 @@
           (ae > 0 ? (' (+<span title="available for expired tasks">') + ae + ')': '') );
       $('#main-list-limit-summary-c').html(c);
     }
-    
+
     // switch current mode
     function updateMode(action) {
-      
+
       var refresh = false;
       if('refresh' == action) {
         action = null;
         refresh = true;
       }
-      
+
       // update action if specified
       __session['action'] = action ? action : __session['action'];
-      
+
       // restore some defaults
       $('#main-list-limit').show();
       $('#main-list-actions').show();
       $('#main-list-manage').removeClass('clickable');
-      
+
       // hide modal page elements
       $('body>*').hide();
       $('#main>*').not('#main-loading').hide();
-      
-      
+
+
       // change mode
       switch(__session['action']) {
         case 'manage':
@@ -1461,21 +2094,26 @@
           doLogin();
           break;
       }
-      
+
+      window.scrollTo(0, 0);
+
     };
-    
+
     // login mode
     function doLogin() {
       // clear caches
       __session['hits-age'] = 0; __session['hits'] = [];
       $('#main-list-table .hit').remove();
-      
+
       // show login box
       $('#login').show();
     }
-    
+
     // set login values
     function setLogin(event) {
+      // set time format display setting
+      __session['time-format'] = parseInt($('#login-time-format').val());
+
       // configure api
       var config = new AWS.Config({
         accessKeyId: $('#login-aws-accessKeyId').val(),
@@ -1483,10 +2121,10 @@
         region: $('#login-aws-region').val()
       });
       AWS.config = config;
-      
+
       // update mturk endpoint
       __session['mturk'] = new AWS.MTurk({ endpoint: $('#login-aws-endpoint').val() });
-      
+
       // update header elements
       $('#header-aws-accessKeyId').text($('#login-aws-accessKeyId').val());
       $('#header-aws-endpoint').text($('#login-aws-endpoint').find(':selected').text());
@@ -1495,10 +2133,10 @@
       } else {
         $('#header').removeClass('sandbox');
       }
-      
+
       updateMode('list');
     }
-    
+
     // manage hits
     function manageHIT(event, hit) {
       __session['current-hit'] = hit;
@@ -1506,7 +2144,7 @@
       updateMode('manage');
       updateHITActions();
     }
-    
+
     // manage mode
     function doManage(refresh) {
       $('#content').show();
@@ -1514,7 +2152,7 @@
       $('#main-list-limit').hide();
       $('#main-list-actions').hide();
       $('#main-manage').show();
-      
+
       // mark header clickable
       $('#main-list-manage').removeClass('clickable').addClass('clickable');
 
@@ -1527,12 +2165,12 @@
       if(doRefresh(__session['assignments-age'])) {
         updateAssignments(__session['current-hit'].HITId);
       }
-      
+
       // filter down to current hit
       listHideExceptSearch(__session['current-hit'].HITId);
       $('.hit .hitid a').removeClass('clickable');
     }
-    
+
     // list hits
     function doList(refresh) {
       $('#content').show();
@@ -1546,18 +2184,18 @@
           $('#main-list-limit-all').click();
         }
       }
-        
+
       // clear assignment cache
       __session['assignments-age'] = 0;
       __session['assignments'] = [];
-      
-      // remove assignments from dom to prevent flash 
+
+      // remove assignments from dom to prevent flash
       $('#main-assignment-table tr.assignment').remove();
 
       // ensure that hitids are clickable
       $('.hit .hitid a').removeClass('clickable').addClass('clickable');
     };
-    
+
     // update stored assignments
     function updateAssignments(hitid) {
       // clear stored assignments
@@ -1573,8 +2211,17 @@
       var params = paginationToken ? {HITId: hitid, MaxResults: rMax, NextToken: paginationToken} : {HITId: hitid, MaxResults: rMax};
       __session['mturk'].listAssignmentsForHIT(params, function(err, data) {
         if (err) {
-          console.log(err.message);
+          if(err.indexOf('Rate') > -1) {
+            __session['rate-limit-delay'] *= 2;
+            window.setTimeout(function() {
+              buildAssignmentCache(hitid, paginationToken);
+            }, __session['rate-limit-delay']);
+          } else {
+            showMessage('API Error', err.message);
+          }
         } else {
+          __session['rate-limit-delay'] = __session['rate-limit-delay'] > 50 ?
+              __session['rate-limit-delay'] / 2 : 50;
           paginationToken = data.NextToken ? data.NextToken : false;
           if(data.NumResults) {
             // add this page of results to cache
@@ -1592,7 +2239,7 @@
         }
       });
     }
-    
+
     // add assignments to dom
     function renderAssignments() {
       //remove previous assignments
@@ -1675,15 +2322,23 @@
               .append( $('<td>').addClass('time')
                 .append(
                   $('<div>').addClass('accept').text('Accept: ')
-                    .append( $('<span>').text( formatDate(assignment.AcceptTime) ) )
+                    .append( $('<span>').text( formatDate(assignment.AcceptTime, __session['time-format']) ) )
                 )
                 .append(
                   $('<div>').addClass('submit').text('Submit: ')
-                    .append( $('<span>').text( formatDate(assignment.SubmitTime) ) )
+                    .append( $('<span>').text( formatDate(assignment.SubmitTime, __session['time-format']) ) )
                 )
                 .append(
-                  $('<div>').addClass('approval').text('Approval: ')
-                    .append( $('<span>').text( formatDate(assignment.ApprovalTime) ) )
+                  $('<div>')
+                    .addClass((assignment.ApprovalTime) ? null : 'future')
+                    .addClass('approval')
+                    .text('Approval: ')
+                    .append( $('<span>').text(
+                      (assignment.ApprovalTime) ?
+                          formatDate(assignment.ApprovalTime, __session['time-format']) :
+                          formatDate(assignment.AutoApprovalTime, __session['time-format'])
+                    )
+                  )
                 )
               )
               // assingment status
@@ -1698,26 +2353,26 @@
                 )
               )
         );
-        
+
       });
-      
-      
+
+
       // only actually render when needed
       if(__session['action'] != 'list') {
         updateMode();
         // filter list
-        $('#main-manage-assign-' + __session['assignment-mode']).click(); 
+        $('#main-manage-assign-' + __session['assignment-mode']).click();
       }
-      
+
       // end activity
       $('#main-loading').hide();
-      
+
     }
-    
+
     // download all data
     function downloadAllData(amazon, rm) {
       var visible = $('#main-list-table .hitid:visible .search-only.hitid');
-      
+
       if(visible.length == 0) {
         showMessage('Error', 'There are no visible HITs.', 'all delete none');
         return;
@@ -1725,7 +2380,7 @@
       var source = [];
       cacheNextHit(source, visible, amazon, rm);
     }
-    
+
     // cache all hits
     function cacheNextHit(source, visible, amazon, rm) {
       $.each(__session['hits'], function(index, hit) {
@@ -1736,7 +2391,7 @@
       updateAssignments($(visible[source.length]).text());
       addToCache(source, visible, amazon, rm);
     }
-    
+
     // add to cache
     function addToCache(source, visible, amazon, rm) {
       setTimeout(function(){
@@ -1744,8 +2399,8 @@
           addToCache(source, visible, amazon, rm);
         } else {
           source.push({
-            "current-hit": JSON.parse(JSON.stringify(__session['current-hit'])), 
-            "assignments": JSON.parse(JSON.stringify(__session['assignments'])) 
+            "current-hit": JSON.parse(JSON.stringify(__session['current-hit'])),
+            "assignments": JSON.parse(JSON.stringify(__session['assignments']))
           });
           if(source.length < visible.length) {
             cacheNextHit(source, visible, amazon, rm)
@@ -1757,7 +2412,6 @@
             // removal (rm) requested
             if(rm) {
               $('#all-delete-hit-confirm').dialog({
-                height: 245,
                 width: 450,
                 minwidth: 450,
                 modal: true,
@@ -1782,22 +2436,22 @@
         }
       }, 100);
     }
-    
+
     // download data
     function downloadData(amazon, source) {
-      
+
       // amazon uses amazon (2), new uses iso (1)
       var dateFormat = amazon ? 2 : 1;
-      
+
       var csv = [];
       var header = ['HitId', 'HitTitle', 'Annotation', 'AssignmentId', 'WorkerId', 'Status', 'AcceptTime', 'SubmitTime'];
       var count = 0;
       var questions = [];
-      var data = []; 
-      
+      var data = [];
+
       // use source data or __session data
       source = source || [__session];
-      
+
       // validate title
       var title = source.length == 1 ? source[0]['current-hit'].HITId : source.length + 'Tasks';
       var name = null;
@@ -1810,7 +2464,7 @@
         })
       }
       title = (name || title).replace(/[^a-zA-Z0-9\\-]/g, '');
-      
+
       // extract appropriate header information
       // -- seperated so that proper headers for all data generated first
       $.each(source, function(index, assignments){
@@ -1825,7 +2479,7 @@
           }
         });
       });
-      
+
       // extract row data
       $.each(source, function(index, assignments){
         // generate data rows
@@ -1861,7 +2515,7 @@
           }
           data.push(row);
         });
-        
+
       })
 
       // finalise headers
@@ -1873,15 +2527,15 @@
         questions.push('ApproveRejectTime')
       }
       header = header.concat(questions);
-      
+
       // combine headers and data
       csv.push(header);
       csv = csv.concat(data);
-      
+
       // download file
       exportData('HITResultsFor' + title + '.csv', csv);
     }
-    
+
     // update stored hits
     function updateHITs(refresh) {
       // clear stored hits
@@ -1899,7 +2553,7 @@
       });
       buildHITCache(false, refresh);
     }
-    
+
     // build cache of hits
     function buildHITCache(paginationToken, refresh) {
       $('#main-loading').show();
@@ -1907,9 +2561,17 @@
       var params = paginationToken ? {MaxResults: rMax, NextToken: paginationToken} : {MaxResults: rMax};
       __session['mturk'].listHITs(params, function(err, data) {
         if (err) {
-          console.log(err.message);
-          updateMode('login');
+          if(err.indexOf('Rate') > -1) {
+            __session['rate-limit-delay'] *= 2;
+            window.setTimeout(function() {
+              buildHITCache(paginationToken, refresh);
+            }, __session['rate-limit-delay']);
+          } else {
+            showMessage('API Error', err.message);
+          }
         } else {
+          __session['rate-limit-delay'] = __session['rate-limit-delay'] > 50 ?
+              __session['rate-limit-delay'] / 2 : 50;
           paginationToken = data.NextToken ? data.NextToken : false;
           if(data.NumResults) {
             // add this page of results to cache
@@ -1927,7 +2589,7 @@
         }
       });
     }
-    
+
     // add hits to dom
     function renderHITs(refresh) {
       //remove previous hits
@@ -1983,22 +2645,32 @@
                               .click(function(event) { previewHIT(event, hit); })
                               .prop('target', '_blank')
                               .prop('href', $(question).find('ExternalURL').text() +
-                                ( $(question).find('ExternalURL').text().indexOf('?') > 0 ? '&' : '?' ) +
-                                'assignmentId=ASSIGNMENT_ID_NOT_AVAILABLE&hitId=' +
-                                hit.HITId +
-                                '&source=manage-hits-console' ) :
+                                  ( $(question).find('ExternalURL').text().indexOf('?') > 0 ? '&' : '?' ) +
+                                  'assignmentId=ASSIGNMENT_ID_NOT_AVAILABLE&hitId=' +
+                                  hit.HITId + '&source=manage-hits-console' ) :
                              null )
                     )
                     .append(
-                      ( hit.HITStatus == 'Assignable' ?
-                            $('<a>').text( '(MTurk)' )
+                      ( $(question).find('HTMLContent').text() ?
+                            $('<a>').text( '(Preview)' )
+                              .click(function(event) { previewHIT(event, hit); })
                               .prop('target', '_blank')
-                              .prop('href',
-                                'https://worker' +
-                                ( ($('#login-aws-endpoint').val().indexOf('sandbox') > -1) ? 'sandbox' : '') +
-                                '.mturk.com/projects/' + hit.HITGroupId + '/tasks?ref=w_pl_prvw'
-                              ) :
-                            null )
+                              .prop('href', 'https://worker' +
+                                  (($('#login-aws-endpoint').val().indexOf('sandbox') > -1) ? 'sandbox' : '') +
+                                  '.mturkcontent.com/dynamic/hit?' +
+                                  'assignmentId=ASSIGNMENT_ID_NOT_AVAILABLE&hitId=' +
+                                  hit.HITId + '&source=manage-hits-console' ) :
+                             null )
+                    )
+                    .append(
+                        $('<a>').text( '(MTurk)' )
+                          .prop('target', '_blank')
+                          .prop('href',
+                            'https://worker' +
+                            (($('#login-aws-endpoint').val().indexOf('sandbox') > -1) ? 'sandbox' : '') +
+                            '.mturk.com/projects/' + hit.HITGroupId + '/tasks'
+                          )
+                          .addClass(( hit.HITStatus == 'Assignable' ? '' : 'not-avail'))
                     )
                 )
                 .append(
@@ -2033,11 +2705,11 @@
                 )
                 .append(
                   $('<div>').addClass('created').text('Created: ')
-                    .append( $('<span>').text( formatDate(hit.CreationTime) ) )
+                    .append( $('<span>').text( formatDate(hit.CreationTime, __session['time-format']) ) )
                 )
                 .append(
                   $('<div>').addClass('expires').text('Expires: ')
-                    .append( $('<span>').text( formatDate(hit.Expiration) ) )
+                    .append( $('<span>').text( formatDate(hit.Expiration, __session['time-format']) ) )
                 )
               )
               // hit status
@@ -2062,24 +2734,28 @@
                   $('<div>').addClass('completed').text('Completed: ')
                     .append( $('<span>').text(hit.NumberOfAssignmentsCompleted) )
                 )
+                .append( $('<span>').addClass('search-only').addClass('hitstatus').text('status/' + hit.HITStatus) )
+                .append( $('<span>').addClass('search-only').addClass('hitstatus-simple').text('status/' + ( (hit.HITStatus == 'Assignable' || hit.HITStatus == 'Unassignable' || hit.Submitted > 0) ? 'active' : 'ended' )) )
+                .append( $('<span>').addClass('search-only').addClass('hitstatus-extra').text(( hit.Submitted > 0 ? 'status/' + 'waiting' : '' )) )
               )
         );
-        
+
       });
-      
+
       if(refresh) {
         // manual refresh, keep state
-        listHideExceptSearch($('#main-list-search').val(), !($('#main-list-limit-all-active').hasClass('clickable')));
+        //listHideExceptSearch($('#main-list-search').val());
+        $('#main-list-search').change();
       } else {
         // do default view
         updateMode();
         updateSummary();
       }
-      
+
       $('#main-loading').hide();
-      
+
     }
-    
+
     // check for refresh time
     function doRefresh(value) {
       if(value) {
@@ -2087,30 +2763,39 @@
       }
       return true;
     }
-    
+
     // format duration
     function formatDuration(s) {
       return Math.floor(s/60/60) + 'h ' + zeroPad(Math.floor((s/60) % 60), 2) + 'm ' + zeroPad((s % 60), 2) + 's';
     }
-    
-    // format date (flag: 0, utc; 1, iso; 2, amazon)
+
+    // format date (flag: 0, utc; 1, iso; 2, amazon; 3, local)
     function formatDate(date, flag) {
-      if(flag == 2) {
-        d = new Date(new Date(date).getTime() - (8 * 60 * 60 * 1000));
-        return d.toUTCString().split(',')[0] + ' ' +
-            d.toUTCString().split(' ')[2] + ' ' +
-            zeroPad(d.getUTCDate(), 2) + ' ' +
-            zeroPad(d.getUTCHours(), 2) + ':' +
-            zeroPad(d.getMinutes(), 2) + ':' +
-            zeroPad(d.getUTCSeconds(), 2) + ' PST ' +
-            d.getUTCFullYear();
+      try {
+        if(flag == 3) { // local
+          return new Date(date).toLocaleString();
+        }
+        if(flag == 2) { // amazon (pst)
+          d = new Date(new Date(date).getTime() - (8 * 60 * 60 * 1000));
+          return d.toUTCString().split(',')[0] + ' ' +
+              d.toUTCString().split(' ')[2] + ' ' +
+              zeroPad(d.getUTCDate(), 2) + ' ' +
+              zeroPad(d.getUTCHours(), 2) + ':' +
+              zeroPad(d.getMinutes(), 2) + ':' +
+              zeroPad(d.getUTCSeconds(), 2) + ' PST ' +
+              d.getUTCFullYear();
+        }
+        if(flag == 1) { // iso
+          return new Date(date).toISOString();
+        }
+        // utc
+        return new Date(date).toUTCString();
+      } catch (e) {
+        // not a date
+        return '';
       }
-      if(flag == 1) {
-        return new Date(date).toISOString();
-      }
-      return new Date(date).toUTCString();
     }
-    
+
     // zero pad numbers
     function zeroPad(number, len, reverse) {
       number = number.toString();
@@ -2119,7 +2804,7 @@
       }
       return number;
     }
-    
+
     // currency pad
     function currencyPad(number) {
       number = number.toString().split('.');
@@ -2130,7 +2815,7 @@
       }
       return number;
     }
-    
+
     // format qualifications
     function formatQualifications(quals) {
       var string = quals.length;
@@ -2156,7 +2841,7 @@
       });
       return string;
     }
-    
+
     // format preview
     function formatPreview(quals) {
       var string = 'No';
@@ -2167,7 +2852,7 @@
       });
       return string;
     }
-  
+
   </script>
 </head>
 
@@ -2179,22 +2864,32 @@
     <a href="https://www.enable-javascript.com/" target="_blank">enable JavaScript</a> and
     refresh this page to continue.
   </noscript>
-  
+
   <div id="login">
     <form action="file://">
       <input id="login-aws-accessKeyId" placeholder="YOUR_ACCESS_ID" type="text">
       <input id="login-aws-secretAccessKey" placeholder="YOUR_SECRET_ACCESS_KEY" type="password">
       <input id="login-aws-region" value="us-east-1" type="hidden">
       <select id="login-aws-endpoint">
-        <option value="https://mturk-requester-sandbox.us-east-1.amazonaws.com">Sandbox</option>
-        <option value="https://mturk-requester.us-east-1.amazonaws.com">Production</option>
+        <optgroup label="Endpoint">
+          <option value="https://mturk-requester-sandbox.us-east-1.amazonaws.com">Sandbox</option>
+          <option value="https://mturk-requester.us-east-1.amazonaws.com">Production</option>
+        </optgroup>
+      </select>
+      <select id="login-time-format">
+        <optgroup label="Time Format">
+          <option value="3" id="login-time-zone">Local</option>
+          <option value="0">GMT (UTC)</option>
+          <option value="1">ISO (UTC)</option>
+          <option value="2">PST (Amazon)</option>
+        </optgroup>
       </select>
       <button id="login-button" type="button" class="ui-button ui-corner-all ui-widget">Continue</button>
     </form>
   </div>
-  
+
   <div id="content">
-  
+
     <div id="header">
       <a id="header-aws">
         <span id="header-aws-endpoint"></span>:
@@ -2203,14 +2898,14 @@
         <span class="clickable ui-button ui-corner-all ui-widget">Change</span>
       </a>
     </div>
-    
+
     <div id="main">
-      
+
       <div id="main-loading">
         <!-- Ajax-loader.gif, optimized, base64 encoded: https://commons.wikimedia.org/wiki/File:Ajax-loader.gif -->
         <img alt="Loading data..." title="Loading data..." src="data:image/gif;base64,R0lGODlhIAAgAPMLALy8vMbGxoSEhLa2tpqamjY2NlZWVtjY2OTk5AQEBB4eHv///wAAAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQFCgALACwAAAAAIAAgAEAE5nDJSSlJpOo6SsmToSiChgwTAgzsIQlwDG/0wt4DgEjn4E6Blo0lue1qlZECJUk4JysfckLwMKeLH/YgxEZzx1o0fKMEr9NBieJMmInYSWG0bhdZYZrB4zFokTg6cYNDgXmEFX8aZywAU1wpX4oVUT9lEpWECIorjohTCgkKiYc1CCMGbE88jYQCIwUTdlmtiANKO3ZcAwEUu2FVfUwBCiA1jLwaA3t8cbuTJmufFQEEMjOEODcA1dfS04+Dz6ZfnljIvRO7YBMDpbvpEgcrpRQ9TJe75s61hSmXcVjE8+erniZBcSIAACH5BAUKAAsALAAAAAAYABcAAARycMlJqxo161lUqQKxiZRiUkWSaMVXnhKhKmwLTCYtKaqgES0DDiaYbRaGFim3OKgSpE3LxTSoXE2B4IbCUmSBCUCrPUgOBcyRMiCHEOvNwe2Lb8aCsP2o3vvjCAADg4R/C4KEhX+BiYOGj5CRkpNHensRACH5BAUKAAsALAEAAAAdAA4AAARycMlJ5yg1671MMdnATQdQFShlKMooCYI4oZg0sPUIC8ecSgWWSwLY+XK4oYQAMy1oCwRLIZsgNgfjMyVggSaCRIKAGAB6E2ZM01oqxAneYA64RgWBUaAAT9QCc3N5Sn1UFAgAgU4uYXFYc2hDBpFYShwRACH5BAUKAAsALAcAAAAZABEAAARpcMm5ggg0600Eyd+2IEcmnFlRiMOATadAqeLSDgiMSoYaaocWQCdbEFSG2gLQKi1iEtVKibhJoAtaRqEYUAJNzaDgHHMVYmfNcFYklZv2lOKFG7l2uCCX7/s1CYGCCj99gocJfwuICYQRACH5BAUKAAsALA4AAAASABgAAARl8JCzqr14ELwA5QshXoQggOFYHeYJilvVAihcAS2axu33jgNTrEIoFFABAcJiMBaGIIrzqKtMDbSq9anter8VhXhM1Y3PiipaURiAvQJfV5BIuLr1ugKKLOQTZVUECnl3WnQJbhEAIfkEBQoACwAsDgAAABIAHgAABIAQAbSqvRgMgAO+QwgSxFeFw0WmJmoNpNeKS0CW5uIud36KNgKrAhAIDqbD8GA0cnwIQlOA802PPkvAmcUMu+BsYUw2fD/kdEGsNoTfFsqboFDA6/XCOWnAK9wmAgkyAwV4JgYJCWsXhiYIiglVXYIJdm8KigJvA5FwBYpyYVQmEQAh+QQFCgALACwPAAEAEQAfAAAEe3DJuQ6iGIcxskcc4GUAd4zUEaIUN1xsxQUpB1P3gpQmu7k0lGsAyHlUg1NMolw6PYKolBCESq+oa5T67DoHhQLBGQ4bnuXCiKCgGMpjikChOE/G6kViL6ErOh57CRN0eRmCEwV0I4iEi4d8EwaPGI0tHgoJbU4ECXFLEQAh+QQFCgALACwIAA4AGAASAAAEbHDJSesaOANk+8wg4Hkgto1oig4qGgiC2FpwfcwUQtQCMQ+F2+LAky0CCUGnUKgAYMJFIZEwLBRYCbM5IlATHKxCQmBaPQqq8pqVGJg+GnUsEVO2nXQizqZPmB1UXHVtE3wVOxUFCoM4H34qEQAh+QQFCgALACwCABIAHQAOAAAEeHDJSatd59JjtD3DkF1CkggeBYQDgFCDYpopFbBDIBVzUuiegOC1QKxCh5JJQZAcmJaBQNCcHFYIggk1MSgUqIJYMhWMLMRJ7LsbLwDl2qTAbhcmhClAvvje7VZxNXQKA3NuEnlcKV8dh38TAGcehhUGBY58cpA1EQAh+QQFCgALACwAAA8AGQARAAAEZ5CoROu6OOtbe9pgJnlfaJ7oiQgpqihECxbvK2dGrRjoMWy1wu8i3PgGgczApikULoLoZUBFoJzPRZS1OAJOBmdMK70AqIcQwcmDlhcI6nCWdXMvAWrIqdlqDlZqGgQCYzcaAQJJGxEAIfkEBQoACwAsAQAIABEAGAAABFxwpCSWvfiKmRTJ4FJwSRGEGKGQaLZRbXZUcW3feK7vKFEUNoDh96sRgYeW72e4IAQn0O9zIQgEg8Vgi5pdLdts6CoAgLkgAPkSHl+TZ7ELi2mDDnILYGC+IQAIEQAh+QQFCgALACwAAAIADgAdAAAEcnDJuYigeKZUMt7J4E3CpoyTsl0oAR5pRxWbkSpKIS5BwkoGHM4A8wwKwhNqgSMsF4jncmAoWK+Zq1ZGoW650vAOBRAIAqODee2xrAlRTNlMQEsG8YVaAKAEBgNFHgiAYx4AgIIZB4B9ZIB5RgN2KAiKEQA7">
       </div>
-    
+
       <div id="main-list">
 
         <h1><a id="main-list-manage">Manage HITs</a></h1>
@@ -2219,6 +2914,8 @@
           Show only:
             <a id="main-list-limit-all">All</a>
             <a id="main-list-limit-all-active" class="active">Active</a>
+            <a id="main-list-limit-all-waiting" class="active">Waiting</a>
+            <a id="main-list-limit-all-ended" class="active">Ended</a>
             <input id="main-list-search" type="text" placeholder="Search All HITs" />
             <a id="main-list-refresh" title="refresh HITs">
               <!-- Reload, David Merfield: http://publicicons.org/reload-icon/ -->
@@ -2234,6 +2931,7 @@
               <polygon points="120,21.832 119.992,68.842 74.827,55.811 "/>
               </svg>
             </a>
+            <a id="main-list-utils" class="clickable ui-button ui-corner-all ui-widget">Worker Actions</a>
             <div id="main-list-limit-summary">
               Summary:
                 <span title="Tasks">T</span>: <span id="main-list-limit-summary-t"></span> /
@@ -2242,7 +2940,7 @@
                 <span title="Completed">C</span>: <span id="main-list-limit-summary-c"></span>
             </div>
         </div>
-      
+
         <table id="main-list-table">
           <tr id="main-list-table-header">
             <th>ID</th>
@@ -2254,7 +2952,7 @@
 
           <tr id="main-list-table-none"><td colspan="5">No tasks to display</td></tr>
         </table>
-      
+
 
         <div id="main-list-actions" class="actions">
           Actions (all visible HITs):
@@ -2262,11 +2960,11 @@
             <a id="main-list-download-amazon" class="adjunct clickable ui-button ui-corner-all ui-widget">Amazon</a>
             <a id="main-list-hit-delete" class="clickable ui-button ui-corner-all ui-widget">Delete</a>
         </div>
-      
+
       </div>
-      
+
       <div id="main-manage">
-      
+
 
         <div id="main-manage-actions" class="actions">
           Actions:
@@ -2300,8 +2998,8 @@
               <polygon points="120,21.832 119.992,68.842 74.827,55.811 "/>
               </svg>
             </a>
-        </div>      
-      
+        </div>
+
         <form id="main-assignment-form" class="actions" action="file://">
 
           <table id="main-assignment-table">
@@ -2325,31 +3023,102 @@
           </div>
 
         </form>
-      
+
       </div>
-      
+
     </div>
-    
+
   </div>
-  
+
   <div id="footer">
     Copyright &copy; 2018 <a href="https://jsonj.co.uk/" target="_blank">Jason T. Jacques</a>.
     <a href="https://github.com/jtjacques/mturk-manage/releases" target="_blank">mturk-manage.html</a> is released under the
     <a href="https://github.com/jtjacques/mturk-manage/blob/master/LICENSE" target="_blank">MIT License</a>.
   </div>
-    
+
   <div id="modal-elements">
-    
+
     <div id="dialog-message" title="">
       <div>
         <span id="dialog-message-message"></span>
       </div>
     </div>
-    
+
+    <div id="worker-actions-menu" title="Worker Actions">
+      <ul>
+        <li>
+          <a id="worker-action-message" class="clickable ui-button ui-corner-all ui-widget">Message Worker</a>
+          <span>Send a message to a worker using their Worker ID.</span>
+        </li>
+        <li>
+          <a id="worker-action-pay" class="clickable ui-button ui-corner-all ui-widget">One-off Payment</a>
+          <span>Create a one-off payment task for a particular worker.</span>
+        </li>
+        <li>
+          <a id="worker-action-mturk" class="clickable ui-button ui-corner-all ui-widget">Visit mturk.com</a>
+          <span>Block workers and manage assignments.</span>
+        </li>
+      </ul>
+    </div>
+
+    <div id="worker-actions-pay-create" title="Create Payment Task">
+      <form>
+        <label for="pay-create-workerid" autofocus="autofocus">Worker ID</label>
+        <input type="text" name="pay-create-workerid" id="pay-create-workerid" placeholder="Required">
+        <label for="pay-create-value">Value (USD)</label>
+        <input type="text" name="pay-create-value" id="pay-create-value" value="0.00">
+        <label for="pay-create-auto">Approve after</label>
+        <select id="pay-create-auto" name="pay-create-auto">
+          <option value="0">Immediately</option>
+          <option value="300" selected="selected">5 minutes</option>
+          <option value="3600">60 minutes</option>
+          <option value="86400">1 day</option>
+          <option value="604800">7 days</option>
+          <option value="2592000">30 days</option>
+        </select>
+      </form>
+      <div>
+        One-off payment tasks are accessible only by the listed Worker ID,
+        submit automatically when accepted, and expire after 30 days.
+      </div>
+      <div>
+        The task will be automatically approved for payment after the selected delay.
+      </div>
+    </div>
+
+    <div id="worker-actions-pay-confirm" title="Confirm Bonus">
+      <div>
+        Create payment task for worker ID <span id="pay-confirm-workerid"></span>?
+      </div>
+      <div>
+        <span>Task payment:</span>
+        <span>$<span id="pay-confirm-value"></span></span>
+      </div>
+      <div>
+        <span>Paying automatically after:</span>
+        <span><span id="pay-confirm-auto"></span></span>
+      </div>
+    </div>
+
+    <div id="worker-actions-pay-result" title="Payment Task Created">
+      <div>
+        Payment task created for <span id="pay-result-workerid"></span> with a
+        reward of <span>$<span id="pay-result-value"></span></span>.
+      </div>
+      <div>
+        The task will be accessible only to this worker, will submit
+        automatically after acceptance, and pay <span id="pay-result-auto"></span> after submission.
+      </div>
+      <div>
+        This task can be accessed by the worker at the following URL:
+        <a id="pay-result-url" target="_blank"></a>
+      </div>
+    </div>
+
     <div id="hit-preview" title="Preview HIT">
       <iframe autofocus="autofocus"></iframe>
     </div>
-    
+
     <div id="bonus-worker" title="Pay Bonus">
       <form>
         <label for="bonus-workerid">Worker ID</label>
@@ -2366,7 +3135,7 @@
         <!-- input type="submit" tabindex="-1" style="position:absolute; top:-1000px" -->
       </form>
     </div>
-    
+
     <div id="bonus-confirm" title="Confirm Bonus">
       <div>
         Pay bonus to worker <span id="bonus-confirm-workerid"></span>?
@@ -2380,7 +3149,7 @@
         <span id="bonus-confirm-message" class="message-content"></span>
       </div>
     </div>
-    
+
     <div id="message-worker" title="Message Workers">
       <form>
         <label for="message-workerids" title="Multiple Worker IDs may be specified using space or comma seperation.">Worker IDs</label>
@@ -2393,7 +3162,7 @@
         <!-- input type="submit" tabindex="-1" style="position:absolute; top:-1000px" -->
       </form>
     </div>
-    
+
     <div id="message-confirm" title="Confirm Message">
       <div>
         Send message to <span id="message-confirm-workerids"></span>?
@@ -2406,7 +3175,7 @@
         <span id="message-confirm-message" class="message-content"></span>
       </div>
     </div>
-    
+
     <div id="reject-assignment" title="Reject Assignment">
       <form>
         <label for="reject-workerid">Worker ID</label>
@@ -2419,7 +3188,7 @@
         <!-- input type="submit" tabindex="-1" style="position:absolute; top:-1000px" -->
       </form>
     </div>
-    
+
     <div id="reject-confirm" title="Confirm Rejection">
       <div>
         Are you sure you wish to reject work by <span id="reject-confirm-workerid"></span>?
@@ -2432,7 +3201,7 @@
         <span id="reject-confirm-feedback" class="message-content"></span>
       </div>
     </div>
-    
+
     <div id="extend-hit" title="Add Time to HIT">
       <form>
         <label for="extend-value">Extend by</label>
@@ -2447,7 +3216,7 @@
         </span>
       </form>
     </div>
-    
+
     <div id="extend-confirm"title="Set HIT Expiration">
       <div>
         Current HIT expiration: <span id="extend-confirm-current"></span>
@@ -2456,7 +3225,7 @@
         New HIT expiration: <span id="extend-confirm-new"></span>
       </div>
     </div>
-    
+
     <div id="increase-hit" title="Add Assignments to HIT">
       <form>
         <span class="wide">
@@ -2467,7 +3236,7 @@
         </span>
       </form>
     </div>
-    
+
     <div id="increase-confirm"title="Add Assignments to HIT">
       <div>
         Add <span id="increase-confirm-increase"></span> assignments to HIT?
@@ -2479,7 +3248,7 @@
         New maximum assignments: <span id="increase-confirm-new"></span>
       </div>
     </div>
-    
+
     <div id="expire-hit" title="Expire HIT">
       <div>
         Title: <span id="expire-hit-title"></span>
@@ -2491,7 +3260,7 @@
         Assignments Avaliable: <span id="expire-hit-assignments"></span>
       </div>
     </div>
-    
+
     <div id="delete-hit" title="Delete HIT">
       <div>
         Title: <span id="delete-hit-title"></span>
@@ -2500,7 +3269,7 @@
         You will no longer be able to manage this HIT or download any response data.
       </div>
     </div>
-    
+
     <div id="all-delete-hit" title="Delete Visible HITs">
       <div>
         <strong><span id="all-delete-hit-title"></span></strong>
@@ -2509,10 +3278,10 @@
         You will no longer be able to manage or download any response data for these HITs.
       </div>
       <div>
-        To avoid data loss, all data will be downloaded prior to deletion. 
+        To avoid data loss, all data will be downloaded prior to deletion.
       </div>
     </div>
-    
+
     <div id="all-delete-hit-confirm" title="Confirm Delete Visible HITs">
       <div>
         <strong>Final confirmation:</strong>
@@ -2524,8 +3293,88 @@
         You will no longer be able to manage or download any response data for these HITs.
       </div>
     </div>
-    
+
+    <!-- cat one-off-payment.html | base64 -b 80 -->
+    <div id="base64-payment-html">
+      PCFET0NUWVBFIGh0bWw+CjxodG1sPgogIDxoZWFkPgogICAgICA8bWV0YSBjaGFyc2V0PSJ1dGYtOCIg
+      Lz4KICAgICAgPHRpdGxlPk9uZS1vZmYgUGF5bWVudCBmb3IgV29ya2VyIElEOiAke1dvcmtlcklEfTwv
+      dGl0bGU+CiAgICAgIDxzY3JpcHQgdHlwZT0idGV4dC9qYXZhc2NyaXB0IiBzcmM9Imh0dHBzOi8vczMu
+      YW1hem9uYXdzLmNvbS9tdHVyay1wdWJsaWMvZXh0ZXJuYWxISVRfdjEuanMiPjwvc2NyaXB0PgogICAg
+      ICA8c3R5bGU+CiAgICAgICAgKiwgaW5wdXQsIGJ1dHRvbiB7CiAgICAgICAgICBmb250LWZhbWlseTog
+      SGVsdmV0aWNhLCBBcmlhbCwgc2Fucy1zZXJpZjsKICAgICAgICB9CiAgICAgICAgYm9keSB7CiAgICAg
+      ICAgICBtYXJnaW46IDJlbTsKICAgICAgICAgIGJhY2tncm91bmQtY29sb3I6IHdoaXRlOwogICAgICAg
+      ICAgY29sb3I6IGJsYWNrOwogICAgICAgIH0KICAgICAgICBoMSB7CiAgICAgICAgICBtYXJnaW46IDAg
+      MCAwLjc1ZW0gMDsKICAgICAgICAgIHBhZGRpbmc6IDAgMCAwLjI1ZW0gMDsKICAgICAgICAgIGJvcmRl
+      ci1ib3R0b206IDAuMWVtIHNvbGlkIGJsYWNrOwogICAgICAgIH0KICAgICAgICBpbnB1dCB7CiAgICAg
+      ICAgICBmb250LXNpemU6IDEwMCU7CiAgICAgICAgICBwYWRkaW5nOiAwLjc1ZW0gMWVtOwogICAgICAg
+      ICAgYm9yZGVyOiAwLjE1ZW0gc29saWQgc2lsdmVyOwogICAgICAgICAgYmFja2dyb3VuZC1jb2xvcjog
+      d2hpdGVzbW9rZTsKICAgICAgICAgIGZsb2F0OiByaWdodDsKICAgICAgICB9CiAgICAgICAgI3dhcm4s
+      ICNhY2NlcHQgewogICAgICAgICAgY29sb3I6IGZpcmVicmljazsKICAgICAgICAgIGJhY2tncm91bmQt
+      Y29sb3I6IG1pc3R5cm9zZTsKICAgICAgICAgIGZvbnQtc2l6ZTogMTI1JTsKICAgICAgICAgIGJvcmRl
+      cjogMC4yNWVtIGRhc2hlZCBmaXJlYnJpY2s7CiAgICAgICAgICBwYWRkaW5nOiAwLjc1ZW0gMWVtOwog
+      ICAgICAgICAgZGlzcGxheTogbm9uZTsKICAgICAgICB9CiAgICAgIDwvc3R5bGU+CiAgPC9oZWFkPgog
+      IDxib2R5PgogICAgPGZvcm0gbmFtZT0ibXR1cmtfZm9ybSIgbWV0aG9kPSJwb3N0IiBpZD0ibXR1cmtf
+      Zm9ybSIgYWN0aW9uPSJodHRwczovL3d3dy5tdHVyay5jb20vbXR1cmsvZXh0ZXJuYWxTdWJtaXQiPgog
+      ICAgICA8aW5wdXQgdHlwZT0iaGlkZGVuIiB2YWx1ZT0iIiBuYW1lPSJhc3NpZ25tZW50SWQiIGlkPSJh
+      c3NpZ25tZW50SWQiIC8+CiAgICAgIDxoMT5PbmUtb2ZmIFBheW1lbnQgZm9yIFdvcmtlciBJRDogJHtX
+      b3JrZXJJRH08L2gxPgogICAgICA8cCBpZD0id2FybiI+CiAgICAgICAgWW91ciBXb3JrZXIgSUQgKDxz
+      cGFuIGlkPSJ3YXJuLXdvcmtlcklkIj48L3NwYW4+KSBpcyBub3QgdGhlIGludGVuZGVkIHJlY2VpcGll
+      bnQgb2YgdGhpcyBwYXltZW50LgogICAgICAgIDxiciAvPjxiciAvPgogICAgICAgIDxzdHJvbmc+UGxl
+      YXNlIHJldHVybiB0aGlzIHRhc2suPC9zdHJvbmc+CiAgICAgIDwvcD4KICAgICAgPHA+CiAgICAgICAg
+      VGhpcyB0YXNrIGlzIGEgb25lLW9mZiBwYXltZW50IGZvciAke1dvcmtlcklEfS4KICAgICAgPC9wPgog
+      ICAgICA8cCBpZD0iY2xpY2siPgogICAgICAgIFBsZWFzZSBjbGljayB0aGUgPGVtPlN1Ym1pdDwvZW0+
+      IGJ1dHRvbiBpZiB0aGlzIHRhc2sgZG9lcyBub3Qgc3VibWl0IGF1dG9tYXRpY2FsbHkuCiAgICAgIDwv
+      cD4KICAgICAgPGlucHV0IHR5cGU9InN1Ym1pdCIgaWQ9InN1Ym1pdEJ1dHRvbiIgdmFsdWU9IlN1Ym1p
+      dCAmcmFxdW87IiAvPgoKICAgICAgPGlucHV0IHR5cGU9ImhpZGRlbiIgdmFsdWU9IiIgbmFtZT0icGFy
+      YW1ldGVyLWFzc2lnbm1lbnRJZCIgaWQ9InBhcmFtZXRlci1hc3NpZ25tZW50SWQiIC8+CiAgICAgIDxp
+      bnB1dCB0eXBlPSJoaWRkZW4iIHZhbHVlPSIiIG5hbWU9InBhcmFtZXRlci1oaXRJZCIgaWQ9InBhcmFt
+      ZXRlci1oaXRJZCIgLz4KICAgICAgPGlucHV0IHR5cGU9ImhpZGRlbiIgdmFsdWU9IiIgbmFtZT0icGFy
+      YW1ldGVyLXR1cmtTdWJtaXRUbyIgaWQ9InBhcmFtZXRlci10dXJrU3VibWl0VG8iIC8+CiAgICAgIDxp
+      bnB1dCB0eXBlPSJoaWRkZW4iIHZhbHVlPSIiIG5hbWU9InBhcmFtZXRlci13b3JrZXJJZCIgaWQ9InBh
+      cmFtZXRlci13b3JrZXJJZCIgLz4KICAgICAgPGlucHV0IHR5cGU9ImhpZGRlbiIgdmFsdWU9IiIgbmFt
+      ZT0iamF2YXNjcmlwdC1jbGllbnRUaW1lIiBpZD0iamF2YXNjcmlwdC1jbGllbnRUaW1lIiAvPgogICAg
+      ICA8aW5wdXQgdHlwZT0iaGlkZGVuIiB2YWx1ZT0iIiBuYW1lPSJqYXZhc2NyaXB0LXVzZXJBZ2VudCIg
+      aWQ9ImphdmFzY3JpcHQtdXNlckFnZW50IiAvPgogICAgICA8aW5wdXQgdHlwZT0iaGlkZGVuIiB2YWx1
+      ZT0iIiBuYW1lPSJqYXZhc2NyaXB0LXdpbmRvd0xvY2F0aW9uIiBpZD0iamF2YXNjcmlwdC13aW5kb3dM
+      b2NhdGlvbiIgLz4KICAgICAgPGlucHV0IHR5cGU9ImhpZGRlbiIgdmFsdWU9IiIgbmFtZT0iamF2YXNj
+      cmlwdC1kb2N1bWVudFJlZmVycmVyIiBpZD0iamF2YXNjcmlwdC1kb2N1bWVudFJlZmVycmVyIiAvPgog
+      ICAgICA8aW5wdXQgdHlwZT0iaGlkZGVuIiB2YWx1ZT0iIiBuYW1lPSJqYXZhc2NyaXB0LWNsaWVudElw
+      IiBpZD0iamF2YXNjcmlwdC1jbGllbnRJcCIgLz4KICAgIDwvZm9ybT4KICAgIDxzY3JpcHQ+dHVya1Nl
+      dEFzc2lnbm1lbnRJRCgpOzwvc2NyaXB0PgogICAgPHNjcmlwdD4KICAgICAgdmFyIGZvcm1fbmFtZSA9
+      ICdtdHVya19mb3JtJzsKICAgICAgdmFyIGFzc2lnbm1lbnRJZCA9IHR1cmtHZXRQYXJhbSgnYXNzaWdu
+      bWVudElkJywgJycpOwogICAgICB2YXIgaGl0SWQgPSB0dXJrR2V0UGFyYW0oJ2hpdElkJywgJycpOwog
+      ICAgICB2YXIgdHVya1N1Ym1pdFRvID0gdHVya0dldFBhcmFtKCd0dXJrU3VibWl0VG8nLCAnJyk7CiAg
+      ICAgIHZhciB3b3JrZXJJZCA9IHR1cmtHZXRQYXJhbSgnd29ya2VySWQnLCAnJyk7CgogICAgICBkb2N1
+      bWVudC5nZXRFbGVtZW50QnlJZCgncGFyYW1ldGVyLWFzc2lnbm1lbnRJZCcpLnZhbHVlID0gYXNzaWdu
+      bWVudElkOwogICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgncGFyYW1ldGVyLWhpdElkJykudmFs
+      dWUgPSBoaXRJZDsKICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3BhcmFtZXRlci10dXJrU3Vi
+      bWl0VG8nKS52YWx1ZSA9IHR1cmtTdWJtaXRUbzsKICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQo
+      J3BhcmFtZXRlci13b3JrZXJJZCcpLnZhbHVlID0gd29ya2VySWQ7CiAgICAgIGRvY3VtZW50LmdldEVs
+      ZW1lbnRCeUlkKCdqYXZhc2NyaXB0LWNsaWVudFRpbWUnKS52YWx1ZSA9IG5ldyBEYXRlKCkudG9JU09T
+      dHJpbmcoKTsKICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2phdmFzY3JpcHQtdXNlckFnZW50
+      JykudmFsdWUgPSBuYXZpZ2F0b3IudXNlckFnZW50OwogICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJ
+      ZCgnamF2YXNjcmlwdC13aW5kb3dMb2NhdGlvbicpLnZhbHVlID0gd2luZG93LmxvY2F0aW9uLmhyZWY7
+      CiAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdqYXZhc2NyaXB0LWRvY3VtZW50UmVmZXJyZXIn
+      KS52YWx1ZSA9IGRvY3VtZW50LnJlZmVycmVyOwoKICAgICAgdmFyIGZvcm0gPSBkb2N1bWVudC5nZXRF
+      bGVtZW50QnlJZChmb3JtX25hbWUpOwogICAgICBpZihmb3JtKSB7CiAgICAgICAgaWYoJ0FTU0lHTk1F
+      TlRfSURfTk9UX0FWQUlMQUJMRScgIT0gYXNzaWdubWVudElkKSB7CiAgICAgICAgICBpZignJHtXb3Jr
+      ZXJJRH0nID09IHdvcmtlcklkKSB7CiAgICAgICAgICAgIHdpbmRvdy5zZXRUaW1lb3V0KCBmdW5jdGlv
+      bigpIHsgZm9ybS5zdWJtaXQoKTsgfSwgMjAwMCk7CiAgICAgICAgICB9IGVsc2UgewogICAgICAgICAg
+      ICBmb3JtLmFjdGlvbiA9ICcnOwogICAgICAgICAgICBmb3JtLmRpc2FibGVkID0gdHJ1ZTsKICAgICAg
+      ICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3N1Ym1pdEJ1dHRvbicpLnN0eWxlLmRpc3BsYXkg
+      PSAnbm9uZSc7CiAgICAgICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdjbGljaycpLnN0eWxl
+      LmRpc3BsYXkgPSAnbm9uZSc7CiAgICAgICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCd3YXJu
+      LXdvcmtlcklkJykuaW5uZXJUZXh0ID0gd29ya2VySWQ7CiAgICAgICAgICAgIGRvY3VtZW50LmdldEVs
+      ZW1lbnRCeUlkKCd3YXJuLXdvcmtlcklkJykuaW5uZXJUZXh0ID0gd29ya2VySWQ7CiAgICAgICAgICAg
+      IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCd3YXJuJykuc3R5bGUuZGlzcGxheSA9ICdibG9jayc7CiAg
+      ICAgICAgICB9CiAgICAgICAgfQogICAgICB9CiAgICA8L3NjcmlwdD4KICAgIDxzY3JpcHQgdHlwZT0i
+      YXBwbGljYXRpb24vamF2YXNjcmlwdCI+CiAgICAgIGZ1bmN0aW9uIGdldElQKGpzb24pIHsKICAgICAg
+      ICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnamF2YXNjcmlwdC1jbGllbnRJcCcpLnZhbHVlID0ganNv
+      bi5pcDsKICAgICAgfQogICAgPC9zY3JpcHQ+CiAgICA8c2NyaXB0IHR5cGU9ImFwcGxpY2F0aW9uL2ph
+      dmFzY3JpcHQiIHNyYz0iaHR0cHM6Ly9hcGkuaXBpZnkub3JnP2Zvcm1hdD1qc29ucCZjYWxsYmFjaz1n
+      ZXRJUCI+PC9zY3JpcHQ+CiAgPC9ib2R5Pgo8L2h0bWw+Cg==
+    </div>
   </div>
-  
+
 </body>
 </html>

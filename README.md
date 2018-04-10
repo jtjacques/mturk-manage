@@ -7,9 +7,41 @@ The tool broadly replicates the functionality and layout of the discontinued int
 
 **There is nothing to install.** The interface runs *locally* in the browser, and has only three external dependencies, the [Amazon AWS SDK](https://aws.amazon.com/sdk-for-browser/), [jQuery and jQuery UI](https://code.jquery.com/), and [AlaSQL](http://alasql.org/), which are loaded automatically.
 
-## Security
+## Contents
 
-To minimise the security implications of automatically downloading and including third-party code, all external dependencies include an `SHA-512` `integrity` property to allow the browser to ensure they have not been tampered with.
+* [Security](#security)
+    * [Identity and Access Management](#identity-and-access-management-iam)
+* [Usage](#usage)
+    * [Login](#login)
+    * [Manage HITs](#manage-hits)
+        * [Finding & Viewing](#finding--viewing-tasks)
+        * [Multi-HIT Actions](#multi-hit-actions)
+        * [HIT Status](#hit-status)
+        * [Task Assignments](#task-assignments)
+        * [Summary Data](#summary-data)
+    * [Manage Assignments](#manage-assignments)
+        * [Task Level Actions](#task-level-actions)
+        * [Assignment Level Actions](#assignment-level-actions)
+    * [Worker Actions](#worker-actions)
+        * [Message Worker](#message-worker)
+        * [Assignment Level Actions](#assignment-level-actions)
+        * [One-off Payment](#one-off-payment)
+        * [Visit mturk.com](#visit-mturk.com)
+    * [Known Issues](#known-issues)
+    * [Limitations](#limitations)
+    * [Known Issues](#known-issues)
+    * [Limitations](#limitations)
+* [Development](#development)
+    * [Change Log](#change-log)
+    * [TODOs](#todos)
+    * [Acknowledgements](#acknowledgements)
+    * [Contact](#contact)
+    * [Licenses](#licenses)
+
+
+# Security
+
+This tool uses a small number of carefully chosen third party libraries, which are loaded automatically. To minimise the security implications of automatically downloading and including third-party code, all external dependencies include an `SHA-512` `integrity` property to allow the browser to ensure they have not been tampered with.
 
 To minimise the risk of your credentials being leaked, it is recommended that this tool is used with a browser that supports the [Subresource Integrity](https://www.w3.org/TR/SRI/) mechanism. At the time of writing the integrity of external resources is currently validated by [Chrome](https://www.google.com/chrome/), [Firefox](https://firefox.com/), and [Opera](https://www.opera.com/).
 
@@ -55,26 +87,29 @@ Once you have logged in, the console lists all HITs currently available for the 
 Loading activity is indicated using an icon in the top right of the management console, under the *Change* login link.
 
 ### Finding & Viewing Tasks
-Tasks can be filtered both by the *Active* status, where the task requires further human interaction, or using the search box. These filters update the presented list of tasks, and summary data detailed below, immediately.
+Tasks can be filtered using the status links or the search box. The *Active* status link shows tasks which require further human interaction, the *Waiting* status link shows just tasks which are waiting for approval or rejection, and the *Ended* status link shows tasks for which no further interaction is required and may be deleted. These filters update the presented list of tasks, and summary data detailed below, immediately.
 
 * Search text is case-insensitive and space-separated. The search will match the full `HitId` or any other terms visible in each row.
 * To match multi-word phrases, use double quotes (`"`). e.g. the search `my task` will match `my second task` but `"my task"` will **not**.
 * Search terms can be negated by prefixing them with a single dash (`-`). e.g. the search `-"a task"` will hide all rows containing the phrase `a task`.
+* The special keywords `status/active`, `status/waiting`, and `status/ended` can be used to filter by task status.
+
+You may refresh the active view at any time by clicking the in-page refresh icon.
 
 The *ID* column shows the truncated `HitId`. Selecting this link displays the task specific and Assignment management options, detailed in the *Manage Assignments* section. Hovering over this link displays the full `HitId`, `HitTypeId`, and `HitGroupId` for this task. Despite the truncated display, either a partial or complete `*Id` can be used as the search parameter.
 
-For externally hosted tasks, using an [`ExternalQuestion`](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_ExternalQuestionArticle.html), the a *(Preview)* link is displayed next to the task title, allowing the task to be easily accessed and viewed. The task is linked as it would be from Amazon Mechanical Turk (including additional URL parameters such as `assignmentId=ASSIGNMENT_ID_NOT_AVAILABLE`).
+For externally hosted tasks, using an [`ExternalQuestion`](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_ExternalQuestionArticle.html), or MTurk hosted [`HTMLQuestion`](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_HTMLQuestionArticle.html) tasks a *(Preview)* link is displayed next to the task title, allowing the task to be easily accessed and viewed. The task is linked as it would be from Amazon Mechanical Turk (including additional URL parameters such as `assignmentId=ASSIGNMENT_ID_NOT_AVAILABLE`).
 
-For tasks which have assignments available an *(MTurk)* link is shown, allowing the task to be easily found and viewed on Amazon Mechanical Turk.
+For tasks which have assignments available an *(MTurk)* link is shown, allowing the task to be easily found and viewed on Amazon Mechanical Turk. Where only pending assignments remain, the link is displayed in grey to indicate that assignments may not be available.
 
 ### Multi-HIT Actions
 At the overview level, the interface offers the following actions which affect all visible HITs. These actions respect the *Active* filter or currently set search value.
 
 * *Download Data*: download a CSV file of answer data grouped by and including `QuestionIdentifier` information and Approval/Rejection information for all visible HITs. Note that timestamps are exported in ISO format.
-	* *Amazon*: download a CSV file of answer data in the original Amazon format, for compatibility. Note that all timestamps are PST, see *Known Issues* for more details.
+  * *Amazon*: download a CSV file of answer data in the original Amazon format, for compatibility. Note that all timestamps are PST, see *Known Issues* for more details.
 * *Delete*: delete all visible HITs.
-	* Note: only HITs which are `Unassignable`, expired or having no available tasks, and for which all assignments have been reviewed may be deleted. Any visible HITs which are ineligible will prevent this action.
-	* Note: a download of all data is forced before final confirmation and actual removal of the HITs.
+  * Note: only HITs which are `Unassignable`, expired or having no available tasks, and for which all assignments have been reviewed may be deleted. Any visible HITs which are ineligible will prevent this action.
+  * Note: a download of all data is forced before final confirmation and actual removal of the HITs.
 
 ### HIT Status
 For ease of recognition, HITs are displayed with various background colours depending on HIT status.
@@ -82,7 +117,7 @@ For ease of recognition, HITs are displayed with various background colours depe
 * `Assignable` HITs have outstanding available assignments and are shown with a white background.
 * `Unassignable` HITs are complete HITs that require no further user interactions and are shown with a mid-grey background.
 * `Unassignable` HITs with unreviewed, submitted assignments are shown with a light-grey background.
-	* This is approximately equivalent to tasks in the `Reviewable` or `Reviewing` state.
+  * This is approximately equivalent to tasks in the `Reviewable` or `Reviewing` state.
 
 ### Task Assignments
 Tasks have a number of assignments, Amazon describes the possible status of these assignments as follows:
@@ -100,10 +135,10 @@ Summary data indicates the following data, indicated in the following format `T:
 
 * `T` number of HITs displayed
 * `P` pending assignments, being previewed or currently accepted by workers
-	* `(+0)` assignments which have been submitted but are yet to be reviewed
+  * `(+0)` assignments which have been submitted but are yet to be reviewed
 * `A` available assignments
-	* `(+0)` assignments which would be available had the HIT not already expired, or that will become available if the HIT is extended
-* `C` completed assignments 
+  * `(+0)` assignments which would be available had the HIT not already expired, or that will become available if the HIT is extended
+* `C` completed assignments
 
 *Hovering the mouse pointer over the relevant letter or parenthesised number in the summary will show tool-tips in most modern browsers.*
 
@@ -118,56 +153,128 @@ You can return the HIT overview list at any time by clicking the *Manage HITs* h
 At the task level, the interface offers the following actions.
 
 * *Download Data*: download a CSV file of answer data grouped by and including `QuestionIdentifier` information and Approval/Rejection information. Note that timestamps are exported in ISO format.
-	* *Amazon*: download a CSV file of answer data in the original Amazon format, for compatibility. Note that all timestamps are PST, see *Known Issues* for more details.
+  * *Amazon*: download a CSV file of answer data in the original Amazon format, for compatibility. Note that all timestamps are PST, see *Known Issues* for more details.
 * *Add Time*: extend an active HIT, or reactivate an expired one. The extension period is specified as an integer number in either *minutes*, *hours* (default), *days*, or *weeks* depending on the drop down selection.
-	* Note: reactivated task expiration is subject to a small error, see *Known Issues* for more information. 
+  * Note: reactivated task expiration is subject to a small error, see *Known Issues* for more information.
 * *Add Assignments*: add additional assignments to the HIT.
-	* Note: not all HITs may have additional assignments created, see *Known Issues* for more information.
+  * Note: not all HITs may have additional assignments created, see *Known Issues* for more information.
 * *Expire*: expire an `Assignable` HIT.
 * *Delete*: delete the HIT.
-	* Note: only HITs which are `Unassignable`, expired or having no available tasks, and for which all assignments have been reviewed may be deleted.
+  * Note: only HITs which are `Unassignable`, expired or having no available tasks, and for which all assignments have been reviewed may be deleted.
 
 ### Assignment Level Actions
 Assignments can be filtered by status, `Submitted`, `Approved`, `Rejected`, or *All*. By default, only the submitted assignments are shown as these require requester attention.
+
+You can refresh the list of assignments at any time by clicking the in-page refresh icon.
 
 The *ID* column shows the truncated `AssignmentId`. Hovering over this link displays the full `AssignmentId`.
 
 Assignments are displayed with various background colours depending on their status.
 
-* `Submitted` assignments are displayed with a white background
-* `Approved` assignments are displayed with a light-grey background
-* `Rejected` assignments are displayed with a light-pink background
+* `Submitted` assignments are displayed with a white background.
+* `Approved` assignments are displayed with a light-grey background.
+* `Rejected` assignments are displayed with a light-pink background.
+
+The time column shows the times of relevant action for each assignment. Note that where *Approval* is indicated in italics, this is the expected automatic approval time should the requester not explicitly reject the assignment.
 
 At the assignment level, the interface offers the following actions.
 
 * *Reject*: reject an assignment.
-	* Note: the interface **requires** the requester to provide feedback to the worker, and rejections must be carried out individually. This limitation is intentional and designed to encourage judicious use of the rejection process.
+  * Note: the interface **requires** the requester to provide feedback to the worker, and rejections must be carried out individually. This limitation is intentional and designed to encourage judicious use of the rejection process.
 * *Approve Selected*: approve the *visible* selected assignments.
-	* Assignments are selected by checking the checkbox to the leftmost column.
-	* All *visible* assignments may be selected at once by using the checkbox in the column header.
-	* Previously rejected assignments may be approved from the *Rejected* or *All* views.
+  * Assignments are selected by checking the checkbox to the leftmost column.
+  * All *visible* assignments may be selected at once by using the checkbox in the column header.
+  * Previously rejected assignments may be approved from the *Rejected* or *All* views.
 * *Bonus*: Send a bonus payment to an individual worker.
-	* Bonus payments can only be sent to workers who have carried out tasks in the last six months and in relation to a specific assignment.
-	* Bonus payments require a bonus value, in US dollars, and a message explaining the reason for the payment.
-		* Note that bonus payments are subject to an [Amazon fee](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_SendBonusOperation.html), similar to the fee charged on the assignment itself.
-	* A payment reference is available which must be unique for each payment in a 24 hour period. This defaults to the last six characters of the `WorkerId` and the last six characters of the `AssignmentId`, separated by a hyphen (`-`). In the event that a bonus payment fails, it can be resent with the same reference without the risk of making the payment twice. Should you wish to send a second bonus to the same worker, for the same assignment, in a 24 hour period the reference should be changed.
-* *Message*: Send a message to an individual worker.
-	* Messages can be sent to multiple workers at the same time, the `WorkerID` should be space or comma (`,`) separated, subject to a limit of 100 workers (See *Limitations* for more details).
-	* Messages require a subject (of up to 200 characters) and message content (up to 4,096 characters).
+  * Bonus payments can only be sent to workers who have carried out tasks in the last six months and in relation to a specific assignment.
+  * Bonus payments require a bonus value, in US dollars, and a message explaining the reason for the payment.
+    * Note that bonus payments are subject to an [Amazon fee](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_SendBonusOperation.html), similar to the fee charged on the assignment itself.
+  * A payment reference is available which must be unique for each payment in a 24 hour period. This defaults to the last six characters of the `WorkerId` and the last six characters of the `AssignmentId`, separated by a hyphen (`-`). In the event that a bonus payment fails, it can be resent with the same reference without the risk of making the payment twice. Should you wish to send a second bonus to the same worker, for the same assignment, in a 24 hour period the reference should be changed.
+* *Message*: see the *Worker Actions* section below.
 * *Message Displayed*: Send a message to all currently displayed workers.
-	* This action respects the current filter option. For example, to message only *Approved* workers, select the *Approved* filter before choosing this action.
-	* *All*: Send a message to all workers for this HIT.
-		* This action is equivalent to selecting the *All* filter and choosing the *Message Displayed* action.
-	* Note that this functionality is limited to 100 workers at a time. See *Limitations* for further information.
+  * This action respects the current filter option. For example, to message only *Approved* workers, select the *Approved* filter before choosing this action.
+  * *All*: Send a message to all workers for this HIT.
+    * This action is equivalent to selecting the *All* filter and choosing the *Message Displayed* action.
+
+
+## Worker Actions
+In addition to actions which strictly relate to existing tasks, the interface also offers *Worker Actions*. These are activated using the *Worker Actions* button on the *Manage HITs* overview page.
+
+### Message Worker
+This action allows the requester to send a message to an individual worker for whom they have previously accepted or rejected an assignment.
+
+Messages can be sent to multiple workers at the same time, the `WorkerId` should be space or comma (`,`) separated, subject to a limit of 100 workers (See *Limitations* for more details).
+
+Messages require a subject (of up to 200 characters) and message content (up to 4,096 characters).
+
+**Note:** The MTurk API does not indicate failure to send a message, and messages to a non-existent or an uncontactable `WorkerId` may appear reported as *Sent*.
+
+### One-off Payment
+This action allows you to create a one-off payment task for a given `WorkerId`. *One-off Payment* tasks allow you to quickly create a *make-up* or compensation task for a worker where they have complete a previous task for you but have been unable to submit due to a technical error.
+
+The action creates a Mechanical Turk hosted task unique to the worker. When accepted the task verifies the `WorkerId`, attempts to automatically submit, and pays the listed reward value automatically after the specified delay. Note that these payments are subject to an [Amazon fee](https://requester.mturk.com/pricing), as with any other task.
+
+To prevent unauthorised workers from claiming the reward, unauthorised workers are identified and not permitted to submit the task. Further, the interface creates a unique qualification for the worker, and requires this qualification to find, preview, and accept the task.
+
+While every effort has been made to ensure unauthorised workers will be unable to access and submit the task, **no liability is accepted for misdirected payments**.
+
+Once you have created a *One-off Payment* task, the URL is provided and should be sent to the worker, explaining that they must accept and submit the task to receive their payment. Typically this is done by replying to an email from the worker and their initial enquiry.
+
+**Note**: The *Message Worker* functionality is typically unsuitable for this reply as the requester is unlikely to have accepted or rejected work. The MTurk API does not notify the requester of failure to send a message, and may incorrectly indicate that the message was *Sent*. In instances where the requester has rejected work, an approval is usually the requested remedy of the worker and should be preferred.
+
+Once created, you may view the task in the management interface, as with any other task. The assignment is submitted with a number of parameters for auditing purposes as follows:
+
+* *parameter-assignmentId*
+  * `AssignmentId` as specified by MTurk.
+* *parameter-hitId*
+  * `HitId` as specified by MTurk.
+* *parameter-turkSubmitTo*
+  * Submission URL as specified by MTurk.
+* *parameter-workerId*
+  * `WorkerId` as specified by MTurk.
+* *javascript-clientTime*
+  * The reported client time of the worker's browser, in ISO format (UTC).
+* *javascript-userAgent*
+  * The reported user-agent string of the worker's browser.
+* *javascript-windowLocation*
+  * The URL of the task, as hosted by MTurk.
+* *javascript-documentReferrer*
+  * The URL which brought the worker to the task.
+* *javascript-clientIp*
+  * The IP address of the worker.
+    * This is gathered by the client, at accept time, using the third party <https://www.ipify.org/> API.
+
+These items are displayed in the interface as the *Answer* for the task and is included in any downloaded data files.
+
+#### Technical Implementation
+For reference, the following described the process used to create *One-off Payment* tasks.
+
+1. A custom *"Worker ID is `WorkerId`"* `QualificationTypeId` is created.
+2. The `QualificationTypeId` is associated with the `WorkerId`.
+3. A `HIT` is created, as follows:
+  * Type: `HTMLQuestion`
+    *  Hosted by MTurk
+    *  Validates `WorkerId` is as specified
+    *  Provides *Submit* button and automatically attempts to submit.
+    *  Automatically approves 5 minutes after submisson.
+  * Requires the `QualificationTypeId` created.
+    * `QualificationTypeId`: `Exists`
+    * `ActionsGuarded `: `DiscoverPreviewAndAccept`
+
+
+### Visit mturk.com
+This action provides a quick link to the appropriate requester page at mturk.com to manage additional worker actions including blocking workers and viewing currently assigned qualifications.
+
+
 
 ## Known Issues
 * When extending an expired task, the expected expiry time indicated may be slightly inaccurate.
-	* This appears to be an issue with the API. While the interface specifies the precise expiration time in the API call, Amazon appears not to respect this for currently expired HITs. Extensions to currently active HITs are typically precise and as indicated.
+  * This appears to be an issue with the API. While the interface specifies the precise expiration time in the API call, Amazon appears not to respect this for currently expired HITs. Extensions to currently active HITs are typically precise and as indicated.
 * Tasks created with fewer then 10 assignments may not be extended to have 10 or more assignments.
-	* This is a limitation of Amazon Mechanical Turk. For more information see the [Amazon Mechanical Turk API Reference](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_CreateAdditionalAssignmentsForHITOperation.html).
+  * This is a limitation of Amazon Mechanical Turk. For more information see the [Amazon Mechanical Turk API Reference](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_CreateAdditionalAssignmentsForHITOperation.html).
 * Amazon formatted CSV export using the same timestamp format as the original Amazon Mechanical Turk exports, however all timestamps are exported as PST. Previously, Amazon would report the timestamp in PST (-8 hours) or PDT (-7 hours) as was appropriate to Seattle, Washington. The exported timestamps are calculated using a negative 8 hour offset from UTC, and are always reported in PST regardless of the current DST offset of Amazon HQ.
-	* ISO format example: *2018-01-23T08:27:02.000Z*
-	* *Amazon* format example: *Tue Jan 23 12:27:02 PST 2018*
+  * ISO format example: *2018-01-23T08:27:02.000Z*
+  * *Amazon* format example: *Tue Jan 23 12:27:02 PST 2018*
 
 ## Limitations
 This tool has been developed rapidly, and primarily with the needs of the author in mind.
@@ -177,26 +284,43 @@ The interface has only undergone limited testing, primarily with [`ExternalQuest
 * HITs which do not include an [`ExternalURL`](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_ExternalQuestionArticle.html#ApiReference_ExternalQuestionArticle-the-externalquestion-data-structure) will not have a *(Preview)* link and cannot be previewed when their state is `Unassignable`.
 * Only three built in qualifications are indicated: *Locale*, to country level; *Masters*; and *Adult*.
 
-Dates and times are shown in the interface in UTC using the [`toUTCString()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toUTCString) method. When exporting data timestamps are reported using ISO or Amazon equivalent formats.
+By default, dates and times are shown in the interface in the browser reported timezone using [toLocaleDateString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleDateString). You may also select GMT (UTC), ISO (UTC) or Amazon formats. When exporting data timestamps are reported using ISO format (UTC) or Amazon equivalent format (PST, as [detailed above](#known-issues)).
 
 Where existing functionality was retained in the official interface, it may not be replicated here. For example, blocking workers may still be done from the official requester [workers page](https://requester.mturk.com/workers).
 
-To minimise the number of API calls, the interface caches the HIT and Assignment data for 5 minutes. If you wish to manually refresh the results, you may click the on screen refresh icon to the right of the search field and assignment filters.
+To minimise the number of API calls, the interface caches the HIT and Assignment data for 5 minutes. If you wish to manually refresh the results, you may click the in-page refresh icon to the right of the search field and assignment filters.
 
 The tool loads all relevant data on each refresh, and does not paginate the results. When managing several hundred tasks or assignments, there may be a small delay in loading the data from the API. Loading activity is indicated in the top right of the console. The tool has been tested, and is functional, with in excess of 350 active tasks loaded.
-
 
 A maximum of 100 workers may be messaged at once.
 
 * This is the result of a limitation of Amazon Mechanical Turk. For more information see the [Amazon Mechanical Turk API Reference](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_NotifyWorkersOperation.html).
 * Should you have a HIT that has more than 100 workers whom you wish to message, this can be accomplished by downloading the data and pasting the `WorkerId`s into the *Worker IDs* box in groups of up to 100. Each `WorkerId` should be separated using a space or comma (`,`) character.
-	* Pasting into the text box directly from *Excel* or another spreadsheet application should be sufficient.
+  * Pasting into the text box directly from *Excel* or another spreadsheet application should be sufficient.
 
 The parameters specified in *(Preview)* links include the additional parameter `source=manage-hits-console` to aid in identification of previews generated by this tool.
+
+When set to pay *Immediately*, the *One-off Payment* tasks may take a few minutes to actually approve. This is a limitation of MTurk, which appears to use a periodic rather than event driven approach to making these payments.
+
 
 # Development
 
 ## Change Log
+
+### 2018-04-10
+* Added *Worker Actions* functionality.
+  * *Message Worker*: (added button) send a message any previously approved or rejected `WorkerId`.
+  * *One-off Payment*: create a *make-up* or compensation task for any `WorkerId`.
+  * *Visit mturk.com*: link to <https://requester.mturk.com> for managing worker block status and qualifications.
+* Added timezone display option to login screen.
+  * Default to local timezone, as reported by the browser.
+  * Note: only affects displayed times, downloaded data is still in ISO or Amazon format.
+* Added check to date processing, to catch `undefined` dates.
+* Added expected automatic approval time in italics.
+* Added basic *Rate Limit* check to high-frequency actions.
+* Added *Preview* for HITs with a `HTMLQuestion`.
+* Automatically reset view on mode change.
+* Bumped AWS SDK to 2.223.1 (was 2.212.1)
 
 ### 2018-03-22
 * Fixed overview level actions regression caused by introducing tool tips.
@@ -204,18 +328,18 @@ The parameters specified in *(Preview)* links include the additional parameter `
 * Fixed minor graphical glitch.
 
 ### 2018-03-21
-* Added `HitId`, `HitTypeID`, `HitGroupId`, and `AssignmentId` hover-over tool tips.
+* Added `HitId`, `HitTypeId`, `HitGroupId`, and `AssignmentId` hover-over tool tips.
 * Minor documentation changes.
 * Bumped AWS SDK to 2.212.1 (was 2.211.1)
 
 ### 2018-03-20
 * Switched to MIT License.
-	* Removed cc-by-sa 3.0 licensed CSV export code.
-	* Added external dependency on AlaSQL (0.4.5).
+  * Removed cc-by-sa 3.0 licensed CSV export code.
+  * Added external dependency on AlaSQL (0.4.5).
 * Improved search functionality.
-	* Search now matches all terms, but in any order, and allows quoting.
+  * Search now matches all terms, but in any order, and allows quoting.
 * Added manual refresh functionality.
-	* Lengthened default refresh to 5 minutes.
+  * Lengthened default refresh to 5 minutes.
 * Added SRI hashes to all third-party external resources.
 * Bumped AWS SDK to 2.211.1 (was 2.210.0)
 
@@ -234,14 +358,14 @@ The parameters specified in *(Preview)* links include the additional parameter `
 
 ### 2018-02-02
 * Avoid calling the API where empty results sets will occur.
-	* Only request additional HIT and Assignment results if the API returns the maximum allowed in the previous call.
+  * Only request additional HIT and Assignment results if the API returns the maximum allowed in the previous call.
 * Replaced all `alert` and `prompt` pop-ups with jQuery UI dialogs to allow for richer user interactions.
-	* Added external dependency on jQuery UI (1.12.1)
+  * Added external dependency on jQuery UI (1.12.1)
 * Added `iframe` previews for `ExternalQuestion` HITs
-	* Added simulated acceptance of tasks. 
+  * Added simulated acceptance of tasks.
 * Added worker management features
-	* *Bonus*: Pay workers bonus
-	* *Message*: Send messages to workers
+  * *Bonus*: Pay workers bonus
+  * *Message*: Send messages to workers
 * Bumped AWS SDK to 2.188.0 (was 2.186.0)
 
 ### 2018-01-23
@@ -249,13 +373,14 @@ The parameters specified in *(Preview)* links include the additional parameter `
 
 ## TODOs
 * Investigate alternative login solutions.
-	* See: [AWS SDK for JavaScript](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials-browser.html)
+  * See: [AWS SDK for JavaScript](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials-browser.html)
 * Possible pagination of tasks and assignments.
 * ~~Improve search functionality.~~
 * Extend and improve qualifications information.
 * Possible task creation support.
+  * ~~Create one-off payment tasks.~~
 * ~~Add worker contact and additional management options.~~
-	* Possibly add *Block* functionality.
+  * Possibly add *Block* functionality.
 * ~~Provide `iframe` previews of tasks.~~
 * Allow direct access to a given `HITId`.
 
@@ -263,30 +388,32 @@ The parameters specified in *(Preview)* links include the additional parameter `
 This tool is based on, includes, links to, or extends a number of additional resources. These are acknowledged here.
 
 * Amazon AWS SDK
-  	* Amazon.com, Inc. 
-  	* <https://github.com/aws/aws-sdk-js>
-  	* License: [Apache License 2.0](https://github.com/aws/aws-sdk-js/blob/master/LICENSE.txt)
+    * Amazon.com, Inc.
+    * <https://github.com/aws/aws-sdk-js>
+    * License: [Apache License 2.0](https://github.com/aws/aws-sdk-js/blob/master/LICENSE.txt)
 * jQuery
-  	* JS Foundation 
-  	* <https://jquery.com>
-  	* License: [MIT License](https://jquery.org/license/)
+    * JS Foundation
+    * <https://jquery.com>
+    * License: [MIT License](https://jquery.org/license/)
 * jQuery UI
-  	* JS Foundation 
-  	* <https://jqueryui.com>
-  	* License: [MIT License](https://jquery.org/license/)
+    * JS Foundation
+    * <https://jqueryui.com>
+    * License: [MIT License](https://jquery.org/license/)
 * AlaSQL
-	* Andrey Gershun
-  	* <https://github.com/agershun/alasql>
-  	* License: [MIT License](https://github.com/agershun/alasql/blob/develop/LICENSE)
+  * Andrey Gershun
+    * <https://github.com/agershun/alasql>
+    * License: [MIT License](https://github.com/agershun/alasql/blob/develop/LICENSE)
 
 * Ajax-loader.gif (optimised, base64 encoded, embedded)
-	* ajaxload.info (<http://www.ajaxload.info>)
-	* <https://commons.wikimedia.org/wiki/File:Ajax-loader.gif>
-	* License: [Public Domain](https://commons.wikimedia.org/wiki/File:Ajax-loader.gif#Licensing)
+  * ajaxload.info (<http://www.ajaxload.info>)
+  * <https://commons.wikimedia.org/wiki/File:Ajax-loader.gif>
+  * License: [Public Domain](https://commons.wikimedia.org/wiki/File:Ajax-loader.gif#Licensing)
 * Reload (embedded)
-	* David Merfield
-	* <http://publicicons.org/reload-icon/>
-	* License [Public Domain](http://publicicons.org/license/)
+  * David Merfield
+  * <http://publicicons.org/reload-icon/>
+  * License [Public Domain](http://publicicons.org/license/)
+
+* ipify: <https://www.ipify.org/>
 
 * Enable JavaScript: <https://enable-javascript.com>
 
