@@ -24,7 +24,6 @@ The tool broadly replicates the functionality and layout of the discontinued int
         * [Assignment Level Actions](#assignment-level-actions)
     * [Worker Actions](#worker-actions)
         * [Message Worker](#message-worker)
-        * [Assignment Level Actions](#assignment-level-actions)
         * [One-off Payment](#one-off-payment)
         * [Visit mturk.com](#visit-mturk.com)
     * [Known Issues](#known-issues)
