@@ -10,9 +10,9 @@ The tool broadly replicates the functionality and layout of the discontinued int
 ## Contents
 
 * [Security](#security)
-    * [Identity and Access Management](#identity-and-access-management-iam)
 * [Usage](#usage)
     * [Login](#login)
+        * [Identity and Access Management](#identity-and-access-management-iam)
     * [Manage HITs](#manage-hits)
         * [Finding & Viewing](#finding--viewing-tasks)
         * [Multi-HIT Actions](#multi-hit-actions)
@@ -40,13 +40,13 @@ The tool broadly replicates the functionality and layout of the discontinued int
 
 # Security
 
-This tool uses a small number of carefully chosen third party libraries, which are loaded automatically. To minimise the security implications of automatically downloading and including third-party code, all external dependencies include an `SHA-512` `integrity` property to allow the browser to ensure they have not been tampered with.
+This tool uses a small number of carefully chosen third-party libraries, which are loaded automatically. To minimise the security implications of automatically downloading and including third-party code, all external dependencies include an `SHA-512` `integrity` property to allow the browser to ensure they have not been tampered with.
 
 To minimise the risk of your credentials being leaked, it is recommended that this tool is used with a browser that supports the [Subresource Integrity](https://www.w3.org/TR/SRI/) mechanism. At the time of writing the integrity of external resources is currently validated by [Chrome](https://www.google.com/chrome/), [Firefox](https://firefox.com/), and [Opera](https://www.opera.com/).
 
 For security reasons, using copies hosted on a web-server is **not** recommended as they may be subject to tampering and increase the likelihood of your security credentials being intercepted and stolen.
 
-**While the management console does not store credentials, or send them to any third party, you accept all liability for the security of your access credentials when using them with this tool.**
+**While the management console does not store credentials, or send them to any third-party, you accept all liability for the security of your access credentials when using them with this tool.**
 
 Additional guidance on limiting the access of your credentials is offered in the *Login* section.
 
@@ -174,7 +174,7 @@ Assignments are displayed with various background colours depending on their sta
 * `Approved` assignments are displayed with a light-grey background.
 * `Rejected` assignments are displayed with a light-pink background.
 
-The time column shows the times of relevant action for each assignment. Note that where *Approval* is indicated in italics, this is the expected automatic approval time should the requester not explicitly reject the assignment.
+The *Time* column shows the times of relevant action for each assignment. Note that where *Approval* is indicated in italics, this is the expected automatic approval time should the requester not explicitly reject the assignment.
 
 At the assignment level, the interface offers the following actions.
 
@@ -241,7 +241,7 @@ Once created, you may view the task in the management interface, as with any oth
   * The URL which brought the worker to the task.
 * *javascript-clientIp*
   * The IP address of the worker.
-    * This is gathered by the client, at accept time, using the third party <https://www.ipify.org/> API.
+    * This is gathered by the client, at accept time, using the third-party <https://www.ipify.org/> API.
 
 These items are displayed in the interface as the *Answer* for the task and is included in any downloaded data files.
 
