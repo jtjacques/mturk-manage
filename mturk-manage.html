@@ -583,37 +583,29 @@
 
       // all link
       $('#main-list-limit-all').click(function(event) {
-        // $('#main-list-limit a').removeClass('clickable').addClass('clickable'); // legacy
         $('#main-list-search').val('');
         updateMode('list'); // switch mode to trigger refresh check
-        // listHideExceptSearch(null); // legacy
         $('#main-list-search').change();
         $(this).removeClass('clickable');
       });
 
       // active link
       $('#main-list-limit-all-active').click(function(event) {
-        // $('#main-list-limit a').removeClass('clickable').addClass('clickable'); // legacy
         $('#main-list-search').val('status/active ');
-        // listHideExceptSearch(null, true); // legacy
         $('#main-list-search').change();
         $(this).removeClass('clickable');
       });
 
       // waiting link
       $('#main-list-limit-all-waiting').click(function(event) {
-        // $('#main-list-limit a').removeClass('clickable').addClass('clickable'); // legacy
         $('#main-list-search').val('status/waiting ');
-        // listHideExceptSearch(null, true, true); // legacy
         $('#main-list-search').change();
         $(this).removeClass('clickable');
       });
 
       // ended link
       $('#main-list-limit-all-ended').click(function(event) {
-        // $('#main-list-limit a').removeClass('clickable').addClass('clickable'); // legacy
         $('#main-list-search').val('status/ended ');
-        // listHideExceptSearch(null, false, true); // legacy
         $('#main-list-search').change();
         $(this).removeClass('clickable');
       });
@@ -2012,19 +2004,6 @@
         });
         return show;
       }).show();
-      // legacy
-      /*
-      if(active && !ended) {
-        $('#main-list-table tr.ended').filter(function(index) { return !$(this).hasClass('waiting'); } ).hide();
-      }
-      if(ended && !active) {
-        $('#main-list-table tr.ended').filter(function(index) { return $(this).hasClass('waiting'); } ).hide();
-        $('#main-list-table tr.active').hide();
-      }
-      if(active && ended) {
-        $('#main-list-table tr').filter(function(index) { return !$(this).hasClass('waiting'); } ).hide();
-      }
-      */
       updateSummary();
       updateHITActions();
     }
