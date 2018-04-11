@@ -28,8 +28,6 @@ The tool broadly replicates the functionality and layout of the discontinued int
         * [Visit mturk.com](#visit-mturk.com)
     * [Known Issues](#known-issues)
     * [Limitations](#limitations)
-    * [Known Issues](#known-issues)
-    * [Limitations](#limitations)
 * [Development](#development)
     * [Change Log](#change-log)
     * [TODOs](#todos)
