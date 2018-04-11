@@ -243,7 +243,7 @@ Once created, you may view the task in the management interface, as with any oth
   * The IP address of the worker.
     * This is gathered by the client, at accept time, using the third-party <https://www.ipify.org/> API.
 
-These items are displayed in the interface as the *Answer* for the task and is included in any downloaded data files.
+These items are displayed in the interface as the *Answer* for the task and are included in any downloaded data files.
 
 #### Technical Implementation
 For reference, the following described the process used to create *One-off Payment* tasks.
@@ -252,10 +252,10 @@ For reference, the following described the process used to create *One-off Payme
 2. The `QualificationTypeId` is associated with the `WorkerId`.
 3. A `HIT` is created, as follows:
   * Type: `HTMLQuestion`
-    *  Hosted by MTurk
-    *  Validates `WorkerId` is as specified
+    *  Hosted by MTurk.
+    *  Validates `WorkerId` is as specified.
     *  Provides *Submit* button and automatically attempts to submit.
-    *  Automatically approves 5 minutes after submisson.
+    *  Automatically approves once submitted, after the specified delay.
   * Requires the `QualificationTypeId` created.
     * `QualificationTypeId`: `Exists`
     * `ActionsGuarded `: `DiscoverPreviewAndAccept`
@@ -280,10 +280,10 @@ This tool has been developed rapidly, and primarily with the needs of the author
 
 The interface has only undergone limited testing, primarily with [`ExternalQuestion`](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_ExternalQuestionArticle.html) type HITs and with the [Locale Qualification](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_QualificationRequirementDataStructureArticle.html#ApiReference_QualificationRequirementDataStructureArticle-the-locale-qualification).
 
-* HITs which do not include an [`ExternalURL`](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_ExternalQuestionArticle.html#ApiReference_ExternalQuestionArticle-the-externalquestion-data-structure) will not have a *(Preview)* link and cannot be previewed when their state is `Unassignable`.
-* Only three built in qualifications are indicated: *Locale*, to country level; *Masters*; and *Adult*.
+* HITs which do not include an [`ExternalURL`](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_ExternalQuestionArticle.html#ApiReference_ExternalQuestionArticle-the-externalquestion-data-structure) or of the type [`HTMLQuestion`](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_HTMLQuestionArticle.html) will not have a *(Preview)* link.
+* Only three built in qualifications are identified: *Locale*, to country level; *Masters*; and *Adult*. Other qualifications are indicated as a count only.
 
-By default, dates and times are shown in the interface in the browser reported timezone using [toLocaleDateString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleDateString). You may also select GMT (UTC), ISO (UTC) or Amazon formats. When exporting data timestamps are reported using ISO format (UTC) or Amazon equivalent format (PST, as [detailed above](#known-issues)).
+By default, dates and times are shown in the interface in the browser reported timezone using [`toLocaleDateString()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleDateString). You may also select GMT (UTC), ISO (UTC) or Amazon formats. When exporting data timestamps are reported using ISO format (UTC) or Amazon equivalent format (PST, as [detailed above](#known-issues)).
 
 Where existing functionality was retained in the official interface, it may not be replicated here. For example, blocking workers may still be done from the official requester [workers page](https://requester.mturk.com/workers).
 
