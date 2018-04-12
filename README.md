@@ -207,7 +207,7 @@ Messages require a subject (of up to 200 characters) and message content (up to 
 **Note:** The MTurk API does not indicate failure to send a message, and messages to a non-existent or an uncontactable `WorkerId` may appear reported as *Sent*.
 
 ### One-off Payment
-This action allows you to create a one-off payment task for a given `WorkerId`. *One-off Payment* tasks allow you to quickly create a *make-up* or compensation task for a worker where they have complete a previous task for you but have been unable to submit due to a technical error.
+This action allows you to create a one-off payment task for a given `WorkerId`. *One-off Payment* tasks allow you to quickly create a *make-up* or compensation task for a worker where they have completed a previous task for you but have been unable to submit due to a technical error.
 
 The action creates a Mechanical Turk hosted task unique to the worker. When accepted the task verifies the `WorkerId`, attempts to automatically submit, and pays the listed reward value automatically after the specified delay. Note that these payments are subject to an [Amazon fee](https://requester.mturk.com/pricing), as with any other task.
 
