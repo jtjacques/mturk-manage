@@ -13,11 +13,11 @@
     jsDelivr: https://www.jsdelivr.com/package/npm/aws-sdk?path=dist
     Using alternative CDN source supporting CORS to allow SRI check.
     Integrity hash generated from the official source as follows:
-    curl https://sdk.amazonaws.com/js/aws-sdk-2.223.1.min.js | openssl dgst -sha512 -binary | openssl base64 -A
+    curl https://sdk.amazonaws.com/js/aws-sdk-2.224.1.min.js | openssl dgst -sha512 -binary | openssl base64 -A
   -->
   <script
-    src="https://cdn.jsdelivr.net/npm/aws-sdk@2.223.1/dist/aws-sdk.min.js"
-    integrity="sha512-fntzcQUlP5fSwOGakPUapNOF2lOy9zclGqnN8Th42o4AlDHQo9ogeE/D4wDCi0u2ywSEJrIAzql6S8LEupn4xQ=="
+    src="https://cdn.jsdelivr.net/npm/aws-sdk@2.224.1/dist/aws-sdk.min.js"
+    integrity="sha512-5+ghtMNuzLSRRkoJgznGss3/qxX78Wpj55iMvxgD1a+itFT86GdPLQfrCld4gfJrgOsmJbSmzm+6Es9Jk6QhAQ=="
     crossorigin="anonymous"></script>
 
   <!-- jQuery, JS Foundation: https://code.jquery.com -->
@@ -798,9 +798,21 @@
       // delete visible hits
       $('#main-list-hit-delete').click(function(event){
         var visible = $('#main-list-table .hitid a:visible');
-
         if(visible.length == 0) {
           showMessage('Error', 'There are no visible HITs.', 'all delete none');
+          return;
+        }
+
+        var active = $('#main-list-table tr.hit.active:visible, #main-list-table tr.hit.waiting:visible');
+        if(active.length > 0) {
+          showMessage('Error', 'There ' + (active.length > 1 ? 'are ' + active.length + ' HITs which require' : ' is 1 HIT which requires') + ' intervention before being eligible for deletion.', 'all delete active',
+              function() {
+                  if(-1 == $('#main-list-search').val().indexOf('status/active')) {
+                    $('#main-list-search').val('status/active ' + $('#main-list-search').val());
+                    $('#main-list-search').change();
+                  }
+                }
+          );
           return;
         }
 
@@ -1868,7 +1880,7 @@
       });
     }
 
-    function showMessage(title, message, err) {
+    function showMessage(title, message, err, f) {
       // italicise api errors if not already
       if (title.toLowerCase().indexOf('api') != -1) {
         err = err || message;
@@ -1882,6 +1894,12 @@
         title: title,
         open: function(event, ui) {
           $('#dialog-message-message').html(message);
+        },
+        close: function(event, ui) {
+          console.log(f);
+          if('function' == typeof(f)) {
+            f();
+          }
         },
         buttons: {
           OK: function() {
@@ -2713,9 +2731,9 @@
                   $('<div>').addClass('completed').text('Completed: ')
                     .append( $('<span>').text(hit.NumberOfAssignmentsCompleted) )
                 )
-                .append( $('<span>').addClass('search-only').addClass('hitstatus').text('status/' + hit.HITStatus) )
-                .append( $('<span>').addClass('search-only').addClass('hitstatus-simple').text('status/' + ( (hit.HITStatus == 'Assignable' || hit.HITStatus == 'Unassignable' || hit.Submitted > 0) ? 'active' : 'ended' )) )
-                .append( $('<span>').addClass('search-only').addClass('hitstatus-extra').text(( hit.Submitted > 0 ? 'status/' + 'waiting' : '' )) )
+                .append( $('<span>').addClass('search-only').addClass('hit-status').text('status/' + hit.HITStatus) )
+                .append( $('<span>').addClass('search-only').addClass('hit-status-simple').text('status/' + ( (hit.HITStatus == 'Assignable' || hit.HITStatus == 'Unassignable' || hit.Submitted > 0) ? 'active' : 'ended' )) )
+                .append( $('<span>').addClass('search-only').addClass('hit-status-extra').text(( hit.Submitted > 0 ? 'status/' + 'waiting' : '' )) )
               )
         );
 

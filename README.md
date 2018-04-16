@@ -304,6 +304,11 @@ When set to pay *Immediately*, the *One-off Payment* tasks may take a few minute
 
 ## Change Log
 
+### 2018-04-16
+* Removed default action for *One-off Payments* and explicitly require JavaScript.
+* Added active HIT check to *Multi-HIT Delete* button ([#1](https://github.com/jtjacques/mturk-manage/issues/1)).
+* Bumped AWS SDK to 2.224.1 (was 2.223.1)
+
 ### 2018-04-10
 * Added *Worker Actions* functionality.
   * *Message Worker*: (added button) send a message any previously approved or rejected `WorkerId`.
