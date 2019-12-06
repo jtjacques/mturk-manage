@@ -304,6 +304,12 @@ When set to pay *Immediately*, the *One-off Payment* tasks may take a few minute
 
 ## Change Log
 
+### 2019-12-06
+* Fixed typo in one-off payment task
+* Updated jQuery to 3.4.1 (was 3.3.1)
+* Updated AlaSQL to 0.5.1 (was 0.4.5)
+* Updated AWS SDK to 2.585.0 (was 2.224.1)
+
 ### 2018-04-16
 * Removed default action for *One-off Payments* and explicitly require JavaScript.
 * Added active HIT check to *Multi-HIT Delete* button ([#1](https://github.com/jtjacques/mturk-manage/issues/1)).
