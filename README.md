@@ -305,7 +305,10 @@ When set to pay *Immediately*, the *One-off Payment* tasks may take a few minute
 ## Change Log
 
 ### 2019-12-06
-* Fixed typo in one-off payment task
+* Fixed typo in one-off payment task.
+* Added `onbeforeunload` exit check.
+* Updated URL and license for Reload icon.
+* Updated copyright dates.
 * Updated jQuery to 3.4.1 (was 3.3.1)
 * Updated AlaSQL to 0.5.1 (was 0.4.5)
 * Updated AWS SDK to 2.585.0 (was 2.224.1)
@@ -418,15 +421,15 @@ This tool is based on, includes, links to, or extends a number of additional res
   * License: [Public Domain](https://commons.wikimedia.org/wiki/File:Ajax-loader.gif#Licensing)
 * Reload (embedded)
   * David Merfield
-  * <http://publicicons.org/reload-icon/>
-  * License [Public Domain](http://publicicons.org/license/)
+  * <https://github.com/davidmerfield/Public-Icons/blob/master/source/icons/reload.svg>
+  * License [CC0 Public Domain Dedication](https://github.com/davidmerfield/Public-Icons/blob/master/LICENSE)
 
 * ipify: <https://www.ipify.org/>
 
 * Enable JavaScript: <https://enable-javascript.com>
 
 ## Contact
-Copyright &copy; 2018 Jason T. Jacques
+Copyright &copy; 2018-2019 Jason T. Jacques
 
 * Email: [jtjacques@gmail.com](mailto:jtjacques@gmail.com?subject=mturk-manage.html)
 * Web: [jsonj.co.uk](https://jsonj.co.uk)
@@ -437,6 +440,6 @@ mturk-manage.html is released under the terms of the [MIT License](https://githu
 
 Ajax-loader.gif is [public domain](https://commons.wikimedia.org/wiki/File:Ajax-loader.gif#Licensing), as acknowledged above, and is included under such provision.
 
-Reload icon is [public domain](http://publicicons.org/license/), as acknowledged above, and is included under such provision.
+Reload icon is released under the [CC0 Public Domain Dedication](https://github.com/davidmerfield/Public-Icons/blob/master/LICENSE), as acknowledged above, and is included under such provision.
 
 Externally loaded resources ([AWS SDK](https://github.com/aws/aws-sdk-js/blob/master/LICENSE.txt), [jQuery](https://jquery.org/license/), [jQuery UI](https://jquery.org/license/), [AlaSQL](https://github.com/agershun/alasql/blob/develop/LICENSE)) are subject to their own licenses.

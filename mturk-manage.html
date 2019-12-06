@@ -555,6 +555,13 @@
         $('#login-time-zone').text( 'Local (' +
             Intl.DateTimeFormat().resolvedOptions().timeZone + ')' );
       } catch (e) { }
+
+      // prevent accidental close
+      $(window).on('beforeunload', function(event) {
+          event.preventDefault(); // default
+          event.returnValue = ''; // chrome
+          return '';
+      });
     }
 
     // attach events to various ui elements
@@ -3028,7 +3035,7 @@
   </div>
 
   <div id="footer">
-    Copyright &copy; 2018 <a href="https://jsonj.co.uk/" target="_blank">Jason T. Jacques</a>.
+    Copyright &copy; 2018-2019 <a href="https://jsonj.co.uk/" target="_blank">Jason T. Jacques</a>.
     <a href="https://github.com/jtjacques/mturk-manage/releases" target="_blank">mturk-manage.html</a> is released under the
     <a href="https://github.com/jtjacques/mturk-manage/blob/master/LICENSE" target="_blank">MIT License</a>.
   </div>
