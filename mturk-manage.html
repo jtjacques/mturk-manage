@@ -13,17 +13,17 @@
     jsDelivr: https://www.jsdelivr.com/package/npm/aws-sdk?path=dist
     Using alternative CDN source supporting CORS to allow SRI check.
     Integrity hash generated from the official source as follows:
-    curl https://sdk.amazonaws.com/js/aws-sdk-2.585.0.min.js | openssl dgst -sha512 -binary | openssl base64 -A
+    curl https://sdk.amazonaws.com/js/aws-sdk-2.742.0.min.js | openssl dgst -sha512 -binary | openssl base64 -A
   -->
   <script
-    src="https://cdn.jsdelivr.net/npm/aws-sdk@2.585.0/dist/aws-sdk.min.js"
-    integrity="sha512-AGT3SxAagEODJIcSTz22SnGgo/5DF8QQmvQHi2LebNHWnTMlgzjpDW76zs7Y8gso8MVlct1n4v5S8MdO03aglw=="
+    src="https://cdn.jsdelivr.net/npm/aws-sdk@2.742.0/dist/aws-sdk.min.js"
+    integrity="sha512-GBxfC6cR9wsq1ozfFIV9sfJH8r/x97sfRZfw6t45bNgkK3WYqAWCb0kpyhr7psTwMvKQQy6TW+lCr3x6224gCQ=="
     crossorigin="anonymous"></script>
 
   <!-- jQuery, JS Foundation: https://code.jquery.com -->
   <script
-    src="https://code.jquery.com/jquery-3.4.1.min.js"
-    integrity="sha512-bnIvzh6FU75ZKxp0GXLH9bewza/OIw6dLVh9ICg0gogclmYGguQJWl8U30WpbsGTqbIiAwxTsbe76DErLq5EDQ=="
+    src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg=="
     crossorigin="anonymous"></script>
 
   <!-- jQuery UI, JS Foundation: https://code.jquery.com/ui -->
@@ -38,11 +38,11 @@
 
   <!-- AlaSQL, Andrey Gershun: https://github.com/agershun/alasql -->
   <!--
-    Note: http://www.jsdelivr.com/#!alasql is the preferred source
+    Note: http://www.jsdelivr.com/#!alasql is the preferred CDN source
   -->
   <script
-    src="https://cdn.jsdelivr.net/npm/alasql@0.5.1/dist/alasql.min.js"
-    integrity="sha512-vNfP5SYZSbPK2UYjCjKF5HfCeAcehfj51KgttYk7a+zxOJI1xcq/cki6KIdkvT5aKEchmFGg1kAfMvarwiwrGw=="
+    src="https://cdn.jsdelivr.net/npm/alasql@0.6.3/dist/alasql.min.js"
+    integrity="sha512-ZvYnxRnB0dm8FRpFl8d3xr47N7VV8jBK2Z5tpZOSagUQ7DUMTIOPiqsbwYKp7msJWlTcVZyUqtwsrgNCkLoBag=="
     crossorigin="anonymous"></script>
   <script>
     // simple conversion function for csv export
@@ -156,7 +156,7 @@
           margin-left: 0;
         }
 
-    table div {
+    table div, .ui-dialog-content table div {
       margin: 0.23em 0;
     }
 
@@ -187,7 +187,7 @@
       opacity: 0.75;
     }
 
-    a {
+    a, .qualid a.clickable {
       color: blue;
     }
 
@@ -275,6 +275,7 @@
       position: fixed;
       top: 5.25em;
       right: 2em;
+      z-index: 9999999;
 
       border: 0.1em solid silver;
       border-color: rgba(128, 128, 128, 0.25);
@@ -294,12 +295,23 @@
       vertical-align: text-top;
     }
 
-    .hit .title a.not-avail {
+    .hit .title a.not-avail{
       color: silver;
       text-decoration: none;
     }
 
-    .hit .keywords {
+    a.faint {
+      color: grey;
+      text-decoration: none;
+      display: inline-block;
+      line-height: 100%;
+      vertical-align: top;
+      padding-top: 0.25em;
+      font-weight: normal;
+      font-size: 70%;
+    }
+
+    .hit .keywords, .qual .keywords {
       font-size: 80%;
     }
 
@@ -319,6 +331,10 @@
         margin-left: 1.5em;
       }
 
+      .actions a:not(.ui-widget) {
+        color: blue;
+      }
+
         .actions a.active, .actions a.adjunct {
           margin-left: 0;
           margin-left: 0;
@@ -328,15 +344,24 @@
           font-style: italic;
         }
 
+    .remove {
+      text-align: center;
+      font-size: 80%;
+    }
+
+      .remove a {
+        margin: 0;
+      }
+
     td.workerid {
       position: relative;
     }
 
-      td.workerid .worker-actions {
+      td.workerid .worker-actions, .remove.actions {
         opacity: 0.33;
       }
 
-      td.workerid:hover .worker-actions {
+      td.workerid:hover .worker-actions, .remove.actions:hover {
         opacity: 1;
       }
 
@@ -360,12 +385,16 @@
       }
 
 
-    #main-list-limit-summary {
+    #main-list-limit-summary, .summary {
       float: right;
       margin: 0.5em 0.25em 0 0;
     }
 
-    #main-list-search {
+    .ui-dialog-content .summary {
+      margin-top: 0.5em;
+    }
+
+    #main-list-search, #quals-list-search, #quals-worker-search {
       font-family: inherit;
       font-size: inherit;
       padding: 0.2em;
@@ -377,14 +406,25 @@
     ::-moz-placeholder { font-style: italic; }
     :-ms-input-placeholder { font-style: italic; }
 
+    #quals-list-search, #quals-worker-search {
+      float: none;
+      margin-top: 0.15em;
+      margin-bottom: 0;
+      width: 18em;
+    }
+
     #main-list-refresh {
       text-decoration: none;
     }
 
-    #main-list-refresh svg {
+    #main-list-refresh svg, .refresh-icon svg {
       width: 1.15em;
       height: 1.15em;
       margin-bottom: -0.2em;
+    }
+
+    a.refresh-icon {
+      text-decoration: none;
     }
 
     #main-manage-refresh svg {
@@ -393,12 +433,12 @@
       margin-bottom: -0.05em;
     }
 
-    #worker-actions-menu ul {
+    #worker-actions-menu ul, #worker-quals-menu ul {
       list-style-type: none;
       padding: 0;
     }
 
-    #worker-actions-menu li span {
+    #worker-actions-menu li span, #worker-quals-menu li span {
       display: block;
       margin: 1em 0 2em 0;
     }
@@ -529,6 +569,11 @@
       color: blue;
     }
 
+    textarea.extra-workers {
+      height: 3em;
+      width: 100%;
+    }
+
   </style>
 
   <script>
@@ -578,6 +623,42 @@
         setLogin(event);
       });
 
+      // qualifications worker search box
+      $('#quals-worker-search').change(function(event) {
+        event.preventDefault();
+        $('#quals-worker-limit-all').removeClass('clickable').addClass('clickable');
+        listHideExceptSearchTable('quals-worker-table', $(this).val());
+        updateQualsSummary('quals-worker-table', 'quals-worker-summary-shown', 'quals-worker-summary-total');
+      });
+      $('#quals-worker-search').keyup(function(event) {
+        $('#quals-worker-search').change();
+      });
+
+      // qualifications worker all link
+      $('#quals-worker-limit-all').click(function(event) {
+        $('#quals-worker-search').val('');
+        $('#quals-worker-search').change();
+        $(this).removeClass('clickable');
+      });
+
+      // qualifications search box
+      $('#quals-list-search').change(function(event) {
+        event.preventDefault();
+        $('#quals-list-limit-all').removeClass('clickable').addClass('clickable');
+        listHideExceptSearchTable('quals-list-table', $(this).val());
+        updateQualsSummary('quals-list-table', 'quals-menu-summary-shown', 'quals-menu-summary-total');
+      });
+      $('#quals-list-search').keyup(function(event) {
+        $('#quals-list-search').change();
+      });
+
+      // qualifications all link
+      $('#quals-list-limit-all').click(function(event) {
+        $('#quals-list-search').val('');
+        $('#quals-list-search').change();
+        $(this).removeClass('clickable');
+      });
+
       // search box
       $('#main-list-search').change(function(event) {
         event.preventDefault();
@@ -619,7 +700,10 @@
 
       // manage hits title (proxy for all link)
       $('#main-list-manage').click(function(event) {
-        $('#main-list-limit-all').click();
+        //$('#main-list-limit-all').click();
+        updateMode('list');
+        $('#main-list-search').change();
+        $(this).removeClass('clickable');
       });
 
       // refresh icons
@@ -633,11 +717,19 @@
         updateMode('refresh');
       });
 
-      // worker actions
+      $('#quals-list-refresh').click(function(event) {
+        updateQuals(true);
+      });
+
+      $('#quals-worker-list-refresh').click(function(event) {
+        updateQualsWorkers(true);
+      });
+
+      // other actions
       $('#main-list-utils').click(function(event) {
 
         $('#worker-actions-menu').dialog({
-          width: 450,
+          width: 650,
           minWidth: 450,
           modal: true,
           open: function(event, ui) { },
@@ -650,13 +742,13 @@
 
       });
 
-      // worker actions - message
+      // other actions - message
       $('#worker-action-message').click(function(event) {
         $(this).closest('.ui-dialog-content').dialog('close');
         messageWorkers(null, '');
       });
 
-      // worker actions - pay
+      // other actions - pay
       $('#worker-action-pay').click(function(event) {
         $(this).closest('.ui-dialog-content').dialog('close');
         $('#worker-actions-pay-create').dialog({
@@ -721,11 +813,123 @@
 
       });
 
-      // worker actions - visit mturk
+      // other actions - visit mturk
       $('#worker-action-mturk').click(function(event) {
         $(this).closest('.ui-dialog-content').dialog('close');
         window.open('https://requester' + (($('#login-aws-endpoint').val().indexOf('sandbox') > -1) ? 'sandbox' : '') + '.mturk.com/workers' , '_blank');
       });
+
+      // other actions - qualifications
+      $('#worker-action-quals').click(function(event) {
+        $(this).closest('.ui-dialog-content').dialog('close');
+        $('#worker-quals-list').dialog({
+          height: (window.innerHeight - 100),
+          width: (window.innerWidth - 150),
+          modal: true,
+          open: function(event, ui) {
+            $('#quals-list-search').val('');
+            updateQuals();
+          },
+          buttons: {
+            Close: function() {
+              $(this).dialog('close');
+            }
+          }
+        });
+      });
+
+      // copy qualified workerids to clipboard
+      $('#quals-worker-table-header th:first').click(function(event) {
+        $('#quals-workers-all').text('');
+        $('#quals-worker-table .workerid a:visible').each(function(i,e) {
+          $('#quals-workers-all').text($('#quals-workers-all').text() + $(e).text() + "\n");
+        })
+        var workerids = document.getElementById('quals-workers-all');
+        workerids.focus();
+        workerids.select();
+        try {
+          var status = document.execCommand('copy');
+          if (!status) {
+            alert('Unable to copy to clipboard');
+          }
+        } catch (err) {
+          alert('Unable to copy to clipboard');
+        }
+        $('#quals-worker-search').focus();
+      });
+
+      // qualifications actions - add
+      $('#quals-menu-create').click(function(event) {
+        $('#quals-add-qual').dialog({
+          width: 450,
+          minWidth: 450,
+          modal: true,
+          open: function(event, ui) {
+            $('#qual-add-name').val('');
+            $('#qual-add-desc').val('');
+            $('#qual-add-keywords').val('');
+          },
+          buttons: {
+            "Create": function() {
+              if($('#qual-add-name').val()) {
+                req({}, function(data) {
+                  d = isret(data);
+                  console.log(d);
+                  if(d.return) {
+                    $('#quals-list-search').val(d.return);
+                    showMessage('Processing', 'This action may take a few minutes to take effect.', null, updateQuals);
+                    //$('#main-loading').show();
+                    //window.setTimeout(updateQuals, 5000); // delay for processing
+                  }
+                }, reqCreateQualification, {
+                  Name: $('#qual-add-name').val(),
+                  Description: $('#qual-add-desc').val(),
+                  Keywords: $('#qual-add-keywords').val()
+                });
+              } else {
+                showMessage('Error', 'No name specified.');
+              }
+              $(this).dialog('close');
+            },
+            Cancel: function() {
+              $(this).dialog('close');
+            }
+          }
+        });
+      });
+
+      // other actions - workers qualification - add
+      $('#quals-worker-add').click(function(event) {
+        $('#quals-add-worker').dialog({
+          width: 450,
+          minWidth: 450,
+          modal: true,
+          open: function(event, ui) {
+            $('#quals-add-workerids').val('');
+            updateQuals();
+          },
+          buttons: {
+            "Add Workers": function() {
+              assignWorkersQualification($('#quals-add-workerids').val(), $('#quals-add-value').val());
+              $(this).dialog('close');
+            },
+            Cancel: function() {
+              $(this).dialog('close');
+            }
+          }
+        });
+      });
+
+      // download all quals link
+      $('#quals-menu-download').click(function(event) {
+        downloadQuals();
+      });
+
+      // download all qualified workers link
+      $('#quals-worker-download').click(function(event) {
+        downloadQualWorkers();
+      });
+
 
       // download link
       $('#main-manage-download').click(function(event) {
@@ -1017,6 +1221,364 @@
     }
 
 
+    // remove qualification
+    function removeQualification(event, qualid) {
+      req({}, function() {
+          showMessage('Processing', 'This action may take a few minutes to take effect.', null, updateQuals);
+        }, reqDeleteQualification, {QualificationTypeId: qualid});
+    }
+
+    // manage qual
+    function manageQual(event, qual) {
+      __session['current-qual'] = qual;
+      $(event.target).closest('.ui-dialog-content').dialog('close');
+      $('#worker-quals-workers').dialog({
+        height: (window.innerHeight - 100),
+        width: (window.innerWidth - 150),
+        modal: true,
+        title: __session['current-qual'].Name + ' (' + __session['current-qual'].QualificationTypeId + ')',
+        open: function(event, ui) {
+          $('#quals-worker-search').val('');
+          updateQualsWorkers();
+        },
+        buttons: {
+          Back: function() {
+            $(this).dialog('close');
+            $('#worker-action-quals').click();
+          },
+          Close: function() {
+            $(this).dialog('close');
+          }
+        }
+      });
+    }
+
+    // update stored quals
+    function updateQualsWorkers(refresh) {
+      if(!refresh) {
+        $('#quals-worker-table .worker').remove();
+      }
+      // clear stored quals
+      __session['quals-workers'] = [];
+      __session['quals-workers-age'] = Date.now();
+      buildQualsWorkersCache(false, refresh);
+    }
+
+    // build cache of quals
+    function buildQualsWorkersCache(paginationToken, refresh) {
+      $('#main-loading').show();
+      var rMax = __session['max-results'] ? __session['max-results'] : 100;
+      var params = {
+        QualificationTypeId: __session['current-qual'].QualificationTypeId,
+        MaxResults: rMax,
+        Status: 'Granted'
+      }
+      if(paginationToken) {
+        params.NextToken = paginationToken;
+      }
+      __session['mturk'].listWorkersWithQualificationType(params, function(err, data) {
+        if (err) {
+          if(err.indexOf('Rate') > -1) {
+            __session['rate-limit-delay'] *= 2;
+            window.setTimeout(function() {
+              buildQualsCache(paginationToken, refresh);
+            }, __session['rate-limit-delay']);
+          } else {
+            showMessage('API Error', err.message);
+          }
+        } else {
+          __session['rate-limit-delay'] = __session['rate-limit-delay'] > 50 ?
+              __session['rate-limit-delay'] / 2 : 50;
+          paginationToken = data.NextToken ? data.NextToken : false;
+          if(data.NumResults) {
+            // add this page of results to cache
+            __session['quals-workers'] = __session['quals-workers'].concat(data.Qualifications);
+            // loop if there are more results
+            if(data.NumResults == rMax) {
+              buildQualsWorkersCache(paginationToken, refresh);
+            }
+          }
+          // end of pages
+          if(data.NumResults != rMax) {
+            // no more quals to get, render
+            renderQualsWorkers(refresh);
+          }
+        }
+      });
+    }
+
+    // add worker quals to dom
+    function renderQualsWorkers(refresh) {
+      // remove previous workers
+      $('#quals-worker-table .worker').remove();
+
+      // process array of workers
+      $.each(__session['quals-workers'], function(index, worker) {
+        // add table row
+        $('#quals-worker-table-header').after(
+          $('<tr>').addClass('worker')
+              .addClass(
+                ( (worker.Status == 'Granted') ? 'active' : 'ended' )
+              )
+              // worker id
+              .append( $('<td>').addClass('workerid')
+                .append($('<span>').addClass('search-only').addClass('workerid').text(worker.WorkerId))
+                .append(
+                  $('<a>')
+                    .text(worker.WorkerId)
+                )
+              )
+              // qual granted
+              .append( $('<td>').addClass('granted')
+                .append(
+                  $('<div>')
+                    .append( $('<span>').text( formatDate(worker.GrantTime, __session['time-format']) ) )
+                )
+              )
+              // qual value
+              .append( $('<td>').addClass('value')
+                .append(
+                  $('<div>')
+                    .append( $('<span>').text( worker.IntegerValue ) )
+                )
+              )
+              // qual remove
+              .append( $('<td>').addClass('remove').addClass('actions')
+                .append(
+                  $('<a>').addClass('clickable')
+                    .addClass('ui-button').addClass('ui-corner-all').addClass('ui-widget')
+                    .click( function(event) { removeWorkerQualification(event, worker.WorkerId, __session['current-qual'].QualificationTypeId); } )
+                    .text('Remove')
+                )
+              )
+        );
+
+      });
+
+      $('#quals-worker-search').change();
+
+      $('#main-loading').hide();
+
+    }
+
+    // download qualification assignments
+    function downloadQualWorkers() {
+
+      var csv = [];
+      var header = ['QualificationTypeId', 'WorkerId', 'GrantTime', 'Status', 'IntegerValue' ];
+      var count = 0;
+      var questions = [];
+      var data = [];
+
+      // use source data or __session data
+      source = __session['quals-workers'];
+      qual   = __session['current-qual'];
+
+      // clean title
+      title = qual.Name.replace(/[^a-zA-Z0-9\\-]/g, '');
+
+      $.each(source, function(index, worker) {
+        var row = [
+          worker.QualificationTypeId,
+          worker.WorkerId,
+          formatDate(worker.GrantTime, 1),
+          worker.Status,
+          worker.IntegerValue
+        ]
+        data.push(row);
+      });
+
+      // combine headers and data
+      csv.push(header);
+      csv = csv.concat(data);
+
+      // download file
+      exportData('QualificationTypeId-' + qual.QualificationTypeId + '-' + title + '-' +
+          formatDate(__session['quals-workers-age'], 1).replace(/[:\.]/g, '-') + '.csv', csv);
+    }
+
+    // assign workers qualification with value
+    function assignWorkersQualification(workerids, value) {
+      workerids = workerids.replace(/[,\r\n]/g, ' ');
+      workerids = workerids.split(' ').filter(function(el) { return el != ''; });
+      if(!(Array.isArray(workerids) && workerids.length > 0)) {
+        showMessage('Error', 'No Worker IDs requested.');
+        return;
+      }
+      value = $.isNumeric(parseInt(value)) ? parseInt(value) : 1;
+      $('#main-loading').show();
+      req({}, updateQualsWorkers, reqAssignWorkersQualification, {
+        QualificationTypeId: __session['current-qual'].QualificationTypeId,
+        WorkerIds: workerids,
+        IntegerValue: value
+      });
+    }
+
+    // remove (revoke) qualification for worker
+    function removeWorkerQualification(event, workerid, qualificationid) {
+      req({}, updateQualsWorkers, reqRemoveWorkerQualification, {
+        QualificationTypeId: qualificationid,
+        WorkerId: workerid
+      });
+    }
+
+    // update stored quals
+    function updateQuals(refresh) {
+      if(!refresh) {
+        $('#quals-list-table .qual').remove();
+      }
+      // clear stored quals
+      __session['quals'] = [];
+      __session['quals-age'] = Date.now();
+      buildQualsCache(false, refresh);
+    }
+
+    // build cache of quals
+    function buildQualsCache(paginationToken, refresh) {
+      $('#main-loading').show();
+      var rMax = __session['max-results'] ? __session['max-results'] : 100;
+      var params = {
+        MustBeRequestable: false,
+        MaxResults: rMax,
+        MustBeOwnedByCaller: true
+      }
+      if(paginationToken) {
+        params.NextToken = paginationToken;
+      }
+      __session['mturk'].listQualificationTypes(params, function(err, data) {
+        if (err) {
+          if(err.indexOf('Rate') > -1) {
+            __session['rate-limit-delay'] *= 2;
+            window.setTimeout(function() {
+              buildQualsCache(paginationToken, refresh);
+            }, __session['rate-limit-delay']);
+          } else {
+            showMessage('API Error', err.message);
+          }
+        } else {
+          __session['rate-limit-delay'] = __session['rate-limit-delay'] > 50 ?
+              __session['rate-limit-delay'] / 2 : 50;
+          paginationToken = data.NextToken ? data.NextToken : false;
+          if(data.NumResults) {
+            // add this page of results to cache
+            __session['quals'] = __session['quals'].concat(data.QualificationTypes);
+            // loop if there are more results
+            if(data.NumResults == rMax) {
+              buildQualsCache(paginationToken, refresh);
+            }
+          }
+          // end of pages
+          if(data.NumResults != rMax) {
+            // no more quals to get, render
+            renderQuals(refresh);
+          }
+        }
+      });
+    }
+
+    // add quals to dom
+    function renderQuals(refresh) {
+      //remove previous quals
+      $('#quals-list-table .qual').remove();
+
+      // process array of quals
+      $.each(__session['quals'], function(index, qual) {
+        // add table row
+        $('#quals-list-table-header').after(
+          $('<tr>').addClass('qual')
+              .addClass(
+                ( (qual.QualificationTypeStatus == 'Active') ? 'active' : 'ended' )
+              )
+              // qual id
+              .append( $('<td>').addClass('qualid')
+                .append($('<span>').addClass('search-only').addClass('qualtypeid').text(qual.QualificationTypeId))
+                .append(
+                  $('<a>').addClass('clickable')
+                    .click( function(event) { manageQual(event, qual); } )
+                    .text('...' + qual.QualificationTypeId.substr(qual.QualificationTypeId.length -6, 6))
+                    .append(
+                      $('<span>').addClass('hover-only')
+                        .append($('<span>').addClass('hover-qual-id').text(qual.QualificationTypeId))
+                        .click( function(event) { event.preventDefault(); event.stopPropagation(); } )
+                    )
+                )
+              )
+              // qual description
+              .append( $('<td>').addClass('qual')
+                .append(
+                  $('<div>').addClass('title')
+                    .append( $('<strong>').text( qual.Name ) )
+                )
+                .append(
+                  $('<div>').addClass('desc').text( qual.Description) )
+                .append(
+                  $('<div>').addClass('keywords').text( qual.Keywords) )
+              )
+              // qual status details
+              .append( $('<td>').addClass('status')
+                .append(
+                  $('<div>').addClass('duration').text('Status: ')
+                    .append( $('<span>').text( qual.QualificationTypeStatus ) )
+                )
+                .append(
+                  $('<div>').addClass('created').text('Created: ')
+                    .append( $('<span>').text( formatDate(qual.CreationTime, __session['time-format']) ) )
+                )
+              )
+              // qual remove
+              .append( $('<td>').addClass('remove').addClass('actions')
+                .append(
+                  $('<a>').addClass('clickable')
+                    .addClass('ui-button').addClass('ui-corner-all').addClass('ui-widget')
+                    .click( function(event) { removeQualification(event, qual.QualificationTypeId); } )
+                    .text('Remove')
+                )
+              )
+        );
+
+      });
+
+      $('#quals-list-search').change();
+
+      $('#main-loading').hide();
+
+    }
+
+
+    // download qualifications
+    function downloadQuals() {
+
+      var csv = [];
+      var header = ['QualificationTypeId', 'Name', 'Description', 'Keywords', 'QualificationTypeStatus', 'CreationTime'];
+      var count = 0;
+      var questions = [];
+      var data = [];
+
+      // use source data or __session data
+      source = __session['quals'];
+
+      $.each(source, function(index, qual) {
+        var row = [
+          qual.QualificationTypeId,
+          qual.Name,
+          qual.Description,
+          qual.Keywords,
+          qual.QualificationTypeStatus,
+          formatDate(qual.CreationTime, 1)
+        ]
+        data.push(row);
+      });
+
+      // combine headers and data
+      csv.push(header);
+      csv = csv.concat(data);
+
+      // download file
+      exportData('QualificationTypes-' + formatDate(__session['quals-age'], 1).replace(/[:\.]/g, '-') + '.csv', csv);
+    }
+
+
+
     // checkbox helper
     function checkboxHelper(event) {
       if($(event)[0].target.tagName.toLowerCase() != 'input') {
@@ -1168,6 +1730,28 @@
       }
     }
 
+    // remove qualification
+    // params: QualificationTypeId
+    function reqDeleteQualification(data) {
+      // set default for MustBeOwnedByCaller to false
+      data.params.MustBeOwnedByCaller = !!(data.params.MustBeOwnedByCaller) || false;
+
+      var params = {
+          QualificationTypeId: data.params.QualificationTypeId
+      };
+      var datain = data;
+      __session['mturk'].deleteQualificationType(params, function(err, data) {
+        if (err) {
+          showMessage('API Error', err.message);
+        } else {
+          // return data, using callback
+          ret(datain, data);
+          return;
+        }
+      });
+
+    }
+
     // search for qualifications
     // params: Query, [MustBeOwnedByCaller false]
     function reqGetQualifications(data) {
@@ -1233,8 +1817,10 @@
         var keywords = data.params.Keywords ?
             data.params.Keywords + ',' + generateQualificationKeyword(data.params.Name) :
             generateQualificationKeyword(data.params.Name);
+        keywords = keywords.replace(/,/g, ' , ').replace(/\s\s+/g, ' ')
+            .replace(/ ,/g, ',').replace(/,\s*,/g, ',').replace(/,,+/g, ',');
         var params = {
-            Description: data.params.Description,
+            Description: (data.params.Description ? data.params.Description : data.params.Name),
             Name: data.params.Name,
             QualificationTypeStatus: 'Active',
             Keywords: keywords
@@ -1312,14 +1898,82 @@
       var datain = data;
       __session['mturk'].associateQualificationWithWorker(params, function(err, data) {
         if (err) {
-          showMessage('API Error', err.message, err);
-          ret(datain, false);
+          if(!datain.params.Silent) {
+            showMessage('API Error', err.message, err);
+            ret(datain, false);
+          } else {
+            console.log(err);
+            if((''+err).indexOf('Rate') > -1) {
+              __session['rate-limit-delay'] *= 2;
+              window.setTimeout(function() {
+                reqAssignWorkerQualification(datain);
+              }, __session['rate-limit-delay']);
+              //return;
+            } else {
+              ret(datain, err);
+            }
+          }
           return;
         } else {
+          __session['rate-limit-delay'] = __session['rate-limit-delay'] > 50 ?
+              __session['rate-limit-delay'] / 2 : 50;
           ret(datain, datain.params.IntegerValue);
           return;
         }
       });
+    }
+
+    // copy extra workers
+    function copyExtraWorkers() {
+      var workerids = $('textarea.extra-workers')[0];
+        workerids.focus();
+        workerids.select();
+        try {
+          var status = document.execCommand('copy');
+          if (!status) {
+            alert('Unable to copy to clipboard');
+          }
+        } catch (err) {
+          alert('Unable to copy to clipboard');
+        }
+    }
+
+    // assign multiple workers qualification
+    // params: WorkerIds, QualificationTypeId, [IntegerValue 1], [SendNotification false]
+    function reqAssignWorkersQualification(data) {
+
+      // check for error; need to handle
+      if(d = isret(data)) {
+        if(!Number.isInteger(d.return)) {
+          message = '<em>' + d.return.message + '</em>' + ( data.params.WorkerIds.length ?
+              '<br/><br/>In addition, the following worker IDs were not processed: ' +
+              '<a class="faint clickable" onclick="copyExtraWorkers()" style="float:right">(Copy All)</a>' +
+              '<br/><br><textarea class="extra-workers">' +
+              data.params.WorkerIds.join("\n") + '</textarea>' : '');
+          showMessage('API Error', message, d.return);
+          ret(data, d.return);
+          return;
+        }
+      }
+
+      if (Array.isArray(data.params.WorkerIds) && data.params.WorkerIds.length) {
+
+        // assign qualification
+        var params = {
+          WorkerId: data.params.WorkerIds.shift(),
+          QualificationTypeId: data.params.QualificationTypeId,
+          IntegerValue: data.params.IntegerValue,
+          SendNotification: data.params.SendNotification,
+          Silent: true,
+          WorkerIds: data.params.WorkerIds
+        }
+        req(data, reqAssignWorkersQualification, reqAssignWorkerQualification, params)
+        return;
+
+      } else {
+        ret(data, true);
+      }
+
     }
 
     // remove qualification
@@ -2005,15 +2659,22 @@
 
     // filter hits
     function listHideExceptSearch(search, active, ended) {
+      listHideExceptSearchTable('main-list-table', search, active, ended);
+      updateSummary();
+      updateHITActions();
+    }
+
+    // filter table
+    function listHideExceptSearchTable(table, search, active, ended) {
       search = search ? search.toLowerCase() : '';
       active = active ? true : false;
       ended = ended ? true : false;
-      $('#main-list-table tr').hide();
-      $('#main-list-table tr').filter(function(index) {
+      $('#' + table + ' tr').hide();
+      $('#' + table + ' tr').filter(function(index) {
         var row = $(this).text().toLowerCase();
         var show = true; // default (i.e for active tasks)
         var terms = [].concat(search.match(/-?"([^"]+)"/g)); // extract quoted search terms
-        terms = terms.concat(search.replace(/-?"([^"]+)"/g, '').split(' ')) // add remaining space-sepearated terms
+        terms = terms.concat(search.replace(/-?"([^"]+)"/g, '').split(' ')) // add remaining space-separated terms
         $.each(terms, function(index, term) {
           if(term) { // only if a valid term
             term = term.replace(/"/g, ''); // remove all quotes from quoted terms
@@ -2029,8 +2690,16 @@
         });
         return show;
       }).show();
-      updateSummary();
-      updateHITActions();
+      if($('#'+ table + ' tr:visible').length > 0) {
+        $('#'+ table + ' tr:last').hide();
+        // special case, only final row with no search
+        if($('#'+ table + ' tr:visible td').length == 0) {
+          $('#'+ table + ' tr:last').show();
+        }
+      } else {
+        $('#'+ table + ' tr:last').show();
+      }
+      $('#'+ table + ' tr:first').show();
     }
 
     // update summary data
@@ -2061,6 +2730,13 @@
       $('#main-list-limit-summary-a').html(al +
           (ae > 0 ? (' (+<span title="available for expired tasks">') + ae + ')': '') );
       $('#main-list-limit-summary-c').html(c);
+    }
+
+    function updateQualsSummary(table, shown, total) {
+      var t = $('#' + table + ' tr:not(.noresult)').length - 1;
+      var s = $('#' + table + ' tr:visible:not(.noresult)').length - 1;
+      $('#' + shown).text(s);
+      $('#' + total).text(t);
     }
 
     // switch current mode
@@ -2470,7 +3146,7 @@
       title = (name || title).replace(/[^a-zA-Z0-9\\-]/g, '');
 
       // extract appropriate header information
-      // -- seperated so that proper headers for all data generated first
+      // -- separated so that proper headers for all data generated first
       $.each(source, function(index, assignments){
         $.each(assignments['assignments'], function(index, assignment) {
           count = count < assignment.Answers.length ? assignment.Answers.length : count;
@@ -2921,7 +3597,7 @@
             <a id="main-list-limit-all-waiting" class="active">Waiting</a>
             <a id="main-list-limit-all-ended" class="active">Ended</a>
             <input id="main-list-search" type="text" placeholder="Search All HITs" />
-            <a id="main-list-refresh" title="refresh HITs">
+            <a id="main-list-refresh" class="refresh-icon" title="refresh HITs">
               <!-- Reload, David Merfield: http://publicicons.org/reload-icon/ -->
               <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
                    width="120px" height="120px" viewBox="0 0 120 120" enable-background="new 0 0 120 120" xml:space="preserve">
@@ -2935,7 +3611,7 @@
               <polygon points="120,21.832 119.992,68.842 74.827,55.811 "/>
               </svg>
             </a>
-            <a id="main-list-utils" class="clickable ui-button ui-corner-all ui-widget">Worker Actions</a>
+            <a id="main-list-utils" class="clickable ui-button ui-corner-all ui-widget">Other Actions</a>
             <div id="main-list-limit-summary">
               Summary:
                 <span title="Tasks">T</span>: <span id="main-list-limit-summary-t"></span> /
@@ -2954,7 +3630,7 @@
             <th>Status</th>
           </tr>
 
-          <tr id="main-list-table-none"><td colspan="5">No tasks to display</td></tr>
+          <tr id="main-list-table-none" class="noresult"><td colspan="5">No tasks to display</td></tr>
         </table>
 
 
@@ -2988,7 +3664,7 @@
             <a id="main-manage-assign-approved">Approved</a>
             <a id="main-manage-assign-rejected">Rejected</a>
             <a id="main-manage-assign-all">All</a>
-            <a id="main-manage-refresh" title="refresh assignments">
+            <a id="main-manage-refresh" class="refresh-icon" title="refresh assignments">
               <!-- Reload, David Merfield: http://publicicons.org/reload-icon/ -->
               <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
                    width="120px" height="120px" viewBox="0 0 120 120" enable-background="new 0 0 120 120" xml:space="preserve">
@@ -3016,7 +3692,7 @@
               <th>Status</th>
               <th>Reject</th>
             </tr>
-            <tr id="main-assignment-table-none"><td colspan="7">No assignments to display</td></tr>
+            <tr id="main-assignment-table-none" class="noresult"><td colspan="7">No assignments to display</td></tr>
           </table>
 
           <div id="main-assignment-actions" class="actions">
@@ -3035,7 +3711,7 @@
   </div>
 
   <div id="footer">
-    Copyright &copy; 2018-2019 <a href="https://jsonj.co.uk/" target="_blank">Jason T. Jacques</a>.
+    Copyright &copy; 2018-2020 <a href="https://jsonj.co.uk/" target="_blank">Jason T. Jacques</a>.
     <a href="https://github.com/jtjacques/mturk-manage/releases" target="_blank">mturk-manage.html</a> is released under the
     <a href="https://github.com/jtjacques/mturk-manage/blob/master/LICENSE" target="_blank">MIT License</a>.
   </div>
@@ -3048,7 +3724,7 @@
       </div>
     </div>
 
-    <div id="worker-actions-menu" title="Worker Actions">
+    <div id="worker-actions-menu" title="Other Actions">
       <ul>
         <li>
           <a id="worker-action-message" class="clickable ui-button ui-corner-all ui-widget">Message Worker</a>
@@ -3059,10 +3735,118 @@
           <span>Create a one-off payment task for a particular worker.</span>
         </li>
         <li>
+          <a id="worker-action-quals" class="clickable ui-button ui-corner-all ui-widget">Manage Qualifications</a>
+          <span>Manage worker qualifications.</span>
+        </li>
+        <li>
           <a id="worker-action-mturk" class="clickable ui-button ui-corner-all ui-widget">Visit mturk.com</a>
-          <span>Block workers and manage assignments.</span>
+          <span>Additonal actions, including blocking workers, found in the mturk.com interface.</span>
         </li>
       </ul>
+    </div>
+
+    <div id="worker-quals-list" title="Qualifications">
+      <div>
+        <div class="actions">
+          Show only:
+          <a id="quals-list-limit-all" class="">All</a>
+          <input id="quals-list-search" type="text" placeholder="Search Qualifications" />
+          <a id="quals-list-refresh" class="refresh-icon clickable" title="refresh qualifications">
+            <!-- Reload, David Merfield: http://publicicons.org/reload-icon/ -->
+            <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                 width="120px" height="120px" viewBox="0 0 120 120" enable-background="new 0 0 120 120" xml:space="preserve">
+            <g>
+                <path d="M60,95.5c-19.575,0-35.5-15.926-35.5-35.5c0-19.575,15.925-35.5,35.5-35.5c13.62,0,25.467,7.714,31.418,19h22.627
+                    C106.984,20.347,85.462,3.5,60,3.5C28.796,3.5,3.5,28.796,3.5,60c0,31.203,25.296,56.5,56.5,56.5
+                    c16.264,0,30.911-6.882,41.221-17.88L85.889,84.255C79.406,91.168,70.201,95.5,60,95.5z"/>
+            </g>
+            <line fill="none" x1="120" y1="0" x2="120" y2="45.336"/>
+            <line fill="none" x1="91.418" y1="43.5" x2="114.045" y2="43.5"/>
+            <polygon points="120,21.832 119.992,68.842 74.827,55.811 "/>
+            </svg>
+          </a>
+          <a id="quals-menu-create" class="clickable ui-button ui-corner-all ui-widget">Create Qualification</a>
+          <a id="quals-menu-download" class="clickable ui-button ui-corner-all ui-widget">Download All</a>
+          <div id="quals-menu-summary" class="summary">
+              <span id="quals-menu-summary-shown" title="Shown"></span> /
+              <span id="quals-menu-summary-total" title="Total"></span>
+          </div>
+        </div>
+        <table id="quals-list-table">
+          <tr id="quals-list-table-header">
+            <th>ID</th>
+            <th>Qualification</th>
+            <th>Status</th>
+            <th>Remove</th>
+          </tr>
+
+          <tr id="quals-list-table-none" class="noresult"><td colspan="4">No qualifications</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div id="worker-quals-workers" title="Qualifications">
+      <div>
+        <div class="actions">
+          Show only:
+          <a id="quals-worker-limit-all" class="">All</a>
+          <input id="quals-worker-search" type="text" placeholder="Search Workers" />
+          <a id="quals-worker-list-refresh" class="refresh-icon clickable" title="refresh worker list">
+            <!-- Reload, David Merfield: http://publicicons.org/reload-icon/ -->
+            <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                 width="120px" height="120px" viewBox="0 0 120 120" enable-background="new 0 0 120 120" xml:space="preserve">
+            <g>
+                <path d="M60,95.5c-19.575,0-35.5-15.926-35.5-35.5c0-19.575,15.925-35.5,35.5-35.5c13.62,0,25.467,7.714,31.418,19h22.627
+                    C106.984,20.347,85.462,3.5,60,3.5C28.796,3.5,3.5,28.796,3.5,60c0,31.203,25.296,56.5,56.5,56.5
+                    c16.264,0,30.911-6.882,41.221-17.88L85.889,84.255C79.406,91.168,70.201,95.5,60,95.5z"/>
+            </g>
+            <line fill="none" x1="120" y1="0" x2="120" y2="45.336"/>
+            <line fill="none" x1="91.418" y1="43.5" x2="114.045" y2="43.5"/>
+            <polygon points="120,21.832 119.992,68.842 74.827,55.811 "/>
+            </svg>
+          </a>
+          <a id="quals-worker-add" class="clickable ui-button ui-corner-all ui-widget">Add Workers</a>
+          <a id="quals-worker-download" class="clickable ui-button ui-corner-all ui-widget">Download All</a>
+          <div id="quals-worker-summary" class="summary">
+              <span id="quals-worker-summary-shown" title="Shown"></span> /
+              <span id="quals-worker-summary-total" title="Total"></span>
+          </div>
+        </div>
+        <table id="quals-worker-table">
+          <tr id="quals-worker-table-header">
+            <th>ID <a class="clickable faint">(Copy Shown)</a></th>
+            <th>Granted</th>
+            <th>Value</th>
+            <th>Remove</th>
+          </tr>
+
+          <tr id="quals-worker-table-none" class="noresult"><td colspan="4">No assigned workers</td></tr>
+
+          <textarea id="quals-workers-all" style="position:fixed;top:-10px;left:-10px;width:1px;height:1px"></textarea>
+        </table>
+      </div>
+    </div>
+
+    <div id="quals-add-worker" title="Add or Update Workers">
+      <form>
+        <label for="quals-workerids" autofocus="autofocus" title="Multiple Worker IDs may be specified using space or comma separation.">Worker IDs</label>
+        <textarea type="text" name="quals-add-workerids" id="quals-add-workerids" placeholder="Required (Multiple Worker IDs may be specified using space or comma separation.)" title="Multiple Worker IDs may be specified using space or comma separation."></textarea>
+        <label for="quals-add-value">Value</label>
+        <input type="text" name="quals-add-value" id="quals-add-value" placeholder="Required (Integer; default 1)" value="1">
+        <!-- Allow form submission with keyboard without duplicating the dialog button -->
+        <!-- input type="submit" tabindex="-1" style="position:absolute; top:-1000px" -->
+      </form>
+    </div>
+
+    <div id="quals-add-qual" title="Create Qualification">
+      <form>
+        <label for="qual-add-name" autofocus="autofocus">Name</label>
+        <input type="text" name="qual-add-name" id="qual-add-name" placeholder="Required">
+        <label for="qual-add-desc">Description</label>
+        <textarea name="qual-add-desc" id="qual-add-desc" placeholder="Optional (defaults to name)"></textarea>
+        <label for="qual-add-keywords">Keywords</label>
+        <input type="text" name="qual-add-keywords" id="qual-add-keywords" placeholder="Optional (comma separated)">
+      </form>
     </div>
 
     <div id="worker-actions-pay-create" title="Create Payment Task">
@@ -3156,8 +3940,8 @@
 
     <div id="message-worker" title="Message Workers">
       <form>
-        <label for="message-workerids" title="Multiple Worker IDs may be specified using space or comma seperation.">Worker IDs</label>
-        <input type="text" name="message-workerids" id="message-workerids" placeholder="Required (Max 100 Worker IDs)" title="Multiple Worker IDs may be specified using space or comma seperation.">
+        <label for="message-workerids" title="Multiple Worker IDs may be specified using space or comma separation.">Worker IDs</label>
+        <input type="text" name="message-workerids" id="message-workerids" placeholder="Required (Max 100 Worker IDs)" title="Multiple Worker IDs may be specified using space or comma separation.">
         <label for="message-subject" autofocus="autofocus">Subject</label>
         <input type="text" name="message-subject" id="message-subject" placeholder="Required (Max 200 characters)" value="">
         <label for="message-message">Message</label>

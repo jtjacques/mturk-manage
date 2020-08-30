@@ -22,9 +22,10 @@ The tool broadly replicates the functionality and layout of the discontinued int
     * [Manage Assignments](#manage-assignments)
         * [Task Level Actions](#task-level-actions)
         * [Assignment Level Actions](#assignment-level-actions)
-    * [Worker Actions](#worker-actions)
+    * [Other Actions](#other-actions)
         * [Message Worker](#message-worker)
         * [One-off Payment](#one-off-payment)
+        * [Manage Qualifications](#manage-qualifications)
         * [Visit mturk.com](#visit-mturk.com)
     * [Known Issues](#known-issues)
     * [Limitations](#limitations)
@@ -40,7 +41,7 @@ The tool broadly replicates the functionality and layout of the discontinued int
 
 This tool uses a small number of carefully chosen third-party libraries, which are loaded automatically. To minimise the security implications of automatically downloading and including third-party code, all external dependencies include an `SHA-512` `integrity` property to allow the browser to ensure they have not been tampered with.
 
-To minimise the risk of your credentials being leaked, it is recommended that this tool is used with a browser that supports the [Subresource Integrity](https://www.w3.org/TR/SRI/) mechanism. At the time of writing the integrity of external resources is currently validated by [Chrome](https://www.google.com/chrome/), [Firefox](https://firefox.com/), and [Opera](https://www.opera.com/).
+To minimise the risk of your credentials being leaked, it is recommended that this tool is used with a browser that supports the [Subresource Integrity](https://www.w3.org/TR/SRI/) mechanism. The integrity of external resources is currently validated by [most major browsers](https://caniuse.com/#feat=subresource-integrity).
 
 For security reasons, using copies hosted on a web-server is **not** recommended as they may be subject to tampering and increase the likelihood of your security credentials being intercepted and stolen.
 
@@ -187,15 +188,15 @@ At the assignment level, the interface offers the following actions.
   * Bonus payments require a bonus value, in US dollars, and a message explaining the reason for the payment.
     * Note that bonus payments are subject to an [Amazon fee](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_SendBonusOperation.html), similar to the fee charged on the assignment itself.
   * A payment reference is available which must be unique for each payment in a 24 hour period. This defaults to the last six characters of the `WorkerId` and the last six characters of the `AssignmentId`, separated by a hyphen (`-`). In the event that a bonus payment fails, it can be resent with the same reference without the risk of making the payment twice. Should you wish to send a second bonus to the same worker, for the same assignment, in a 24 hour period the reference should be changed.
-* *Message*: see the *Worker Actions* section below.
+* *Message*: see the *Other Actions* section below.
 * *Message Displayed*: Send a message to all currently displayed workers.
   * This action respects the current filter option. For example, to message only *Approved* workers, select the *Approved* filter before choosing this action.
   * *All*: Send a message to all workers for this HIT.
     * This action is equivalent to selecting the *All* filter and choosing the *Message Displayed* action.
 
 
-## Worker Actions
-In addition to actions which strictly relate to existing tasks, the interface also offers *Worker Actions*. These are activated using the *Worker Actions* button on the *Manage HITs* overview page.
+## Other Actions
+In addition to actions which strictly relate to existing tasks, the interface also offers *Other Actions*. These are activated using the *Other Actions* button on the *Manage HITs* overview page.
 
 ### Message Worker
 This action allows the requester to send a message to an individual worker for whom they have previously accepted or rejected an assignment.
@@ -259,6 +260,58 @@ For reference, the following described the process used to create *One-off Payme
     * `ActionsGuarded `: `DiscoverPreviewAndAccept`
 
 
+### Manage Qualifications
+This action provides an interface for creating, managing, and removing qualifications.
+
+**Note**: All actions in this section of the interface are effected immediately.
+
+#### Viewing Qualifications
+On opening the interface, all qualification types owned by the requester are listed. This list can be filtered using the search box as for *[Finding & Viewing Tasks](#finding--viewing-tasks)*.
+
+The truncated `QualificationTypeId` is shown in the leftmost column, and hovering displays the full `QualificationTypeId`.
+
+A list of assigned workers can be seen by clicking the truncated `QualificationTypeId`. See *[Viewing Qualified Workers](#viewing-qualified-workers)* for further details.
+
+A complete list of qualifications owned by the requester can be downloaded using the *Download All* button. **Note**: this download ignores any currently specified search filter. 
+
+The list of qualification types can be refreshed using the in-dialogue refresh icon.
+
+#### Creating Qualifications
+New qualification types can be created by choosing the *Create Qualificaiton* button next to the search box in the main *Manage Qualifications* interface.
+
+Thhe *Create* dialogue box prompts for a *Name*, *Description*, and list of comma separated *Keywords*. The name of the qualification must be unique among qualifications owned by the requester. If the *Description* is not populated, the title text is repeated in the description. *Keywords* are optional.
+
+All qualifications created with this interface add an addional keyword `mturk-manage-qualification/*`. This is for internal managment purposes.
+
+**Note**: this action may take a short period to take effect. The `QualificationTypeID` is returned immediately and is entered in the search box. As such, the interface may indicate no matching qualification types. The listing can be refreshed using the in-dialogue refresh icon.
+
+#### Removing Qualifications
+Qualification types can be removed by clicking the *Remove* button in the right most column of the main *Manage Qualifications* interface.
+
+**Note**: this action may take a short period to take effect.
+
+#### Viewing Qualified Workers
+On clicking the truncated `QualificationTypeId` in the main *Manage Qualifications* interface the list of assigned workers is displayed. This list can be filtered using the search box as for *[Finding & Viewing Tasks](#finding--viewing-tasks)*.
+
+The list of workers assigned this qualification can be refreshed using the in-dialogue refresh icon.
+
+The *Copy Shown* option above the *ID* column allows the currently displayed list of workers to be copied to the clipboard.
+
+A complete list of qualified workers can be downloaded using the *Download All* button. **Note**: this download ignores any currently specified search filter. 
+
+#### Assigning Qualifications
+Workers may be assigned the qualification by choosing the *Add Workers* button. Each `WorkerId` should be sparated by a space, comma, or new line.
+
+The qualification may be assigned with an associated integer value using the *Value* box. The default value is *1*. In the event that this value needs to be updated, can be effected by reassigning the qualification to the worker with the correct value. **Warning**: Non-integer values are automatically assigned with the value *0*.
+
+**Note**: Each worker is assigned the qualification individually. While any number of workers may be added, large numbers of workers may take several seconds to process. Please wait for the activity indicator in the top right to complete.
+
+In the event of an error, such as a `WorkerId` which could not be proccessed, the action terminates. Due to the nature of assigning the qualifications, this action is not atomic and any `WorkerId` up to that point will have been assigned as requested. To aid in resuming the operation a list of unprocessed IDs, **excluding** the offending `WorkerId`, is provided. This list of unprocessed IDs may be copied using the *Copy All* link, ready to be pasted into a subsequent *Add Workers* request.
+
+#### Revoking Qualifications
+In the event that a worker has been added in error, or you wish to revoke a qualification, qualifications can be unassigned using the appropriate *Remove* button in the right-most column of the worker listing.
+
+
 ### Visit mturk.com
 This action provides a quick link to the appropriate requester page at mturk.com to manage additional worker actions including blocking workers and viewing currently assigned qualifications.
 
@@ -287,7 +340,7 @@ Where existing functionality was retained in the official interface, it may not 
 
 To minimise the number of API calls, the interface caches the HIT and Assignment data for 5 minutes. If you wish to manually refresh the results, you may click the in-page refresh icon to the right of the search field and assignment filters.
 
-The tool loads all relevant data on each refresh, and does not paginate the results. When managing several hundred tasks or assignments, there may be a small delay in loading the data from the API. Loading activity is indicated in the top right of the console. The tool has been tested, and is functional, with in excess of 350 active tasks loaded.
+The tool loads all relevant data on each refresh, and does not paginate the results. When managing several hundred tasks or assignments, there may be a small delay in loading the data from the API. Loading activity is indicated in the top right of the console. The tool has been tested, and is functional, with in excess of 500 active tasks loaded.
 
 A maximum of 100 workers may be messaged at once.
 
@@ -303,6 +356,15 @@ When set to pay *Immediately*, the *One-off Payment* tasks may take a few minute
 # Development
 
 ## Change Log
+
+### 2020-08-30
+* Renamed *Worker Actions* to *Other Actions*
+* Added *Manage Qualifications* option to *Other Actions*
+* Search is now preserved when returning to *Manage* mode.
+* Updated copyright dates.
+* Updated jQuery to 3.5.1 (was 3.4.1)
+* Updated AlaSQL to 0.6.3 (was 0.5.1)
+* Updated AWS SDK to 2.742.0 (was 2.585.0)
 
 ### 2019-12-06
 * Fixed typo in one-off payment task.
@@ -429,7 +491,7 @@ This tool is based on, includes, links to, or extends a number of additional res
 * Enable JavaScript: <https://enable-javascript.com>
 
 ## Contact
-Copyright &copy; 2018-2019 Jason T. Jacques
+Copyright &copy; 2018-2020 Jason T. Jacques
 
 * Email: [jtjacques@gmail.com](mailto:jtjacques@gmail.com?subject=mturk-manage.html)
 * Web: [jsonj.co.uk](https://jsonj.co.uk)
