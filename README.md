@@ -82,7 +82,7 @@ If you do not intend to use the interface to modify HITs or assignments in any w
 ## Manage HITs
 Once you have logged in, the console lists all HITs currently available for the requester.
 
-Loading activity is indicated using an icon in the top right of the management console, under the *Change* login link.
+Loading activity is indicated using an overlay and icon, in the centre of the screen.
 
 ### Finding & Viewing Tasks
 Tasks can be filtered using the status links or the search box. The *Active* status link shows tasks which require further human interaction, the *Waiting* status link shows just tasks which are waiting for approval or rejection, and the *Ended* status link shows tasks for which no further interaction is required and may be deleted. These filters update the presented list of tasks, and summary data detailed below, immediately.
@@ -272,16 +272,16 @@ The truncated `QualificationTypeId` is shown in the leftmost column, and hoverin
 
 A list of assigned workers can be seen by clicking the truncated `QualificationTypeId`. See *[Viewing Qualified Workers](#viewing-qualified-workers)* for further details.
 
-A complete list of qualifications owned by the requester can be downloaded using the *Download All* button. **Note**: this download ignores any currently specified search filter. 
+A complete list of qualifications owned by the requester can be downloaded using the *Download All* button. **Note**: this download ignores any currently specified search filter.
 
 The list of qualification types can be refreshed using the in-dialogue refresh icon.
 
 #### Creating Qualifications
-New qualification types can be created by choosing the *Create Qualificaiton* button next to the search box in the main *Manage Qualifications* interface.
+New qualification types can be created by choosing the *Create Qualification* button next to the search box in the main *Manage Qualifications* interface.
 
-Thhe *Create* dialogue box prompts for a *Name*, *Description*, and list of comma separated *Keywords*. The name of the qualification must be unique among qualifications owned by the requester. If the *Description* is not populated, the title text is repeated in the description. *Keywords* are optional.
+The *Create* dialogue box prompts for a *Name*, *Description*, and list of comma separated *Keywords*. The name of the qualification must be unique among qualifications owned by the requester. If the *Description* is not populated, the title text is repeated in the description. *Keywords* are optional.
 
-All qualifications created with this interface add an addional keyword `mturk-manage-qualification/*`. This is for internal managment purposes.
+All qualifications created with this interface add an additional keyword `mturk-manage-qualification/*`. This is for internal management purposes.
 
 **Note**: this action may take a short period to take effect. The `QualificationTypeID` is returned immediately and is entered in the search box. As such, the interface may indicate no matching qualification types. The listing can be refreshed using the in-dialogue refresh icon.
 
@@ -293,20 +293,22 @@ Qualification types can be removed by clicking the *Remove* button in the right 
 #### Viewing Qualified Workers
 On clicking the truncated `QualificationTypeId` in the main *Manage Qualifications* interface the list of assigned workers is displayed. This list can be filtered using the search box as for *[Finding & Viewing Tasks](#finding--viewing-tasks)*.
 
+In addition, workers can be filtered by the granted value by prefixing the desired value with the special keyword `value/`. For example, `value/5` would filter for workers with a currently granted value beginning with `5`, i.e. this would also match a value of (for example) `57`. To limit to the precise value a second forward slash (`/`) can be added, e.g. `value/5/`. This would only match workers with a currently specified value of `5`.
+
 The list of workers assigned this qualification can be refreshed using the in-dialogue refresh icon.
 
 The *Copy Shown* option above the *ID* column allows the currently displayed list of workers to be copied to the clipboard.
 
-A complete list of qualified workers can be downloaded using the *Download All* button. **Note**: this download ignores any currently specified search filter. 
+A complete list of qualified workers can be downloaded using the *Download All* button. **Note**: this download ignores any currently specified search filter.
 
 #### Assigning Qualifications
-Workers may be assigned the qualification by choosing the *Add Workers* button. Each `WorkerId` should be sparated by a space, comma, or new line.
+Workers may be assigned the qualification by choosing the *Add Workers* button. Each `WorkerId` should be separated by a space, comma, or new line.
 
 The qualification may be assigned with an associated integer value using the *Value* box. The default value is *1*. In the event that this value needs to be updated, can be effected by reassigning the qualification to the worker with the correct value. **Warning**: Non-integer values are automatically assigned with the value *0*.
 
-**Note**: Each worker is assigned the qualification individually. While any number of workers may be added, large numbers of workers may take several seconds to process. Please wait for the activity indicator in the top right to complete.
+**Note**: Each worker is assigned the qualification individually. While any number of workers may be added, large numbers of workers may take several seconds to process. Please wait for the activity indicator to complete.
 
-In the event of an error, such as a `WorkerId` which could not be proccessed, the action terminates. Due to the nature of assigning the qualifications, this action is not atomic and any `WorkerId` up to that point will have been assigned as requested. To aid in resuming the operation a list of unprocessed IDs, **excluding** the offending `WorkerId`, is provided. This list of unprocessed IDs may be copied using the *Copy All* link, ready to be pasted into a subsequent *Add Workers* request.
+In the event of an error, such as a `WorkerId` which could not be processed, the action terminates. Due to the nature of assigning the qualifications, this action is not atomic and any `WorkerId` up to that point will have been assigned as requested. To aid in resuming the operation a list of unprocessed IDs, **excluding** the offending `WorkerId`, is provided. This list of unprocessed IDs may be copied using the *Copy All* link, ready to be pasted into a subsequent *Add Workers* request.
 
 #### Revoking Qualifications
 In the event that a worker has been added in error, or you wish to revoke a qualification, qualifications can be unassigned using the appropriate *Remove* button in the right-most column of the worker listing.
@@ -340,7 +342,7 @@ Where existing functionality was retained in the official interface, it may not 
 
 To minimise the number of API calls, the interface caches the HIT and Assignment data for 5 minutes. If you wish to manually refresh the results, you may click the in-page refresh icon to the right of the search field and assignment filters.
 
-The tool loads all relevant data on each refresh, and does not paginate the results. When managing several hundred tasks or assignments, there may be a small delay in loading the data from the API. Loading activity is indicated in the top right of the console. The tool has been tested, and is functional, with in excess of 500 active tasks loaded.
+The tool loads all relevant data on each refresh, and does not paginate the results. When managing several hundred tasks or assignments, there may be a small delay in loading the data from the API. Loading activity is indicated using a loading overlay and icon. The tool has been tested, and is functional, with in excess of 500 active tasks loaded.
 
 A maximum of 100 workers may be messaged at once.
 
@@ -356,6 +358,13 @@ When set to pay *Immediately*, the *One-off Payment* tasks may take a few minute
 # Development
 
 ## Change Log
+
+### 2020-09-02
+* Added `value/` keyword filtering for qualifications.
+* Switched to a fully modal loading icon, to avoid issues with modal windows from jQuery UI.
+* Added explicit login error message.
+* Minor documentation updates.
+* Updated AWS SDK to 2.744.0 (was 2.742.0)
 
 ### 2020-08-30
 * Renamed *Worker Actions* to *Other Actions*

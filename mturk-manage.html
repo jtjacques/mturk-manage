@@ -13,11 +13,11 @@
     jsDelivr: https://www.jsdelivr.com/package/npm/aws-sdk?path=dist
     Using alternative CDN source supporting CORS to allow SRI check.
     Integrity hash generated from the official source as follows:
-    curl https://sdk.amazonaws.com/js/aws-sdk-2.742.0.min.js | openssl dgst -sha512 -binary | openssl base64 -A
+    curl https://sdk.amazonaws.com/js/aws-sdk-2.744.0.min.js | openssl dgst -sha512 -binary | openssl base64 -A
   -->
   <script
-    src="https://cdn.jsdelivr.net/npm/aws-sdk@2.742.0/dist/aws-sdk.min.js"
-    integrity="sha512-GBxfC6cR9wsq1ozfFIV9sfJH8r/x97sfRZfw6t45bNgkK3WYqAWCb0kpyhr7psTwMvKQQy6TW+lCr3x6224gCQ=="
+    src="https://cdn.jsdelivr.net/npm/aws-sdk@2.744.0/dist/aws-sdk.min.js"
+    integrity="sha512-l1lT1pJi6jbEhBSVBWyYTA5ZCLjhc2sqb6C/IbgcNlnNLR0bUNhFGGTmpJWojyadEQar7VyeM489Cole8qwiWA=="
     crossorigin="anonymous"></script>
 
   <!-- jQuery, JS Foundation: https://code.jquery.com -->
@@ -273,20 +273,29 @@
 
     #main-loading {
       position: fixed;
-      top: 5.25em;
-      right: 2em;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       z-index: 9999999;
-
-      border: 0.1em solid silver;
-      border-color: rgba(128, 128, 128, 0.25);
-      border-radius: 0.5em;
-      background-color: white;
-      background-color: rgba(255, 255, 255, 0.85);
-      display: flex;
+      background-color: rgba(192, 192, 192, 0.66);
     }
 
       #main-loading img {
-        padding: 0.6em;
+        position: fixed;
+        top: 50vh; /*5.25em;*/
+        right: 50vw; /*2em;*/
+
+        padding: 10px;
+        margin-left: -27px;
+        margin-top: -27px;
+
+        border: 2px solid silver;
+        border-color: darkgray; /*rgba(128, 128, 128, 0.25);*/
+        border-radius: 0.5em;
+        background-color: white;
+        background-color: rgba(255, 255, 255, 0.85);
+        display: flex;
       }
 
     .hit .title a {
@@ -1337,6 +1346,7 @@
               )
               // qual value
               .append( $('<td>').addClass('value')
+                .append($('<span>').addClass('search-only').addClass('value').text('value/'+ worker.IntegerValue + '/'))
                 .append(
                   $('<div>')
                     .append( $('<span>').text( worker.IntegerValue ) )
@@ -2765,17 +2775,17 @@
       switch(__session['action']) {
         case 'manage':
           doManage(refresh);
+          window.scrollTo(0, 0);
           break;
         case 'list':
           doList(refresh);
+          window.scrollTo(0, 0);
           break;
         default:
         case 'login':
           doLogin();
           break;
       }
-
-      window.scrollTo(0, 0);
 
     };
 
@@ -3225,6 +3235,7 @@
         if (err) {
           console.log(err.message);
           updateMode('login');
+          showMessage("Error", err, err.message)
         } else {
           if(data.AvailableBalance) {
             $('#header-aws-balance').text('($'+ data.AvailableBalance + ')');
