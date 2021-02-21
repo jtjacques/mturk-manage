@@ -309,6 +309,10 @@
       text-decoration: none;
     }
 
+    .hit .annotation {
+      font-style: italic;
+    }
+
     a.faint {
       color: grey;
       text-decoration: none;
@@ -3364,6 +3368,8 @@
                           .addClass(( hit.HITStatus == 'Assignable' ? '' : 'not-avail'))
                     )
                 )
+                .append(
+                  hit.RequesterAnnotation ? $('<div>').addClass('annotation').text( hit.RequesterAnnotation ) : null )
                 .append(
                   $('<div>').addClass('desc').text( hit.Description) )
                 .append(
